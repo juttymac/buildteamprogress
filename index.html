@@ -266,8 +266,15 @@
   var TEAM_ORDER = ["assimilation-membership", "gospel-story", "knowing-god", "communing-with-god", "life-in-community", "life-on-mission"];
 
   var sb = null;
-  if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && CFG.SUPABASE_URL.indexOf("PASTE_") === -1) {
-    sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+  var startupError = null;
+  try {
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      startupError = "Couldn't load the Supabase client library (the script from the CDN didn't load). Check your internet connection, disable any ad blocker for this site, and reload. If it keeps happening, open the browser console (F12) for the exact error.";
+    } else if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && CFG.SUPABASE_URL.indexOf("PASTE_") === -1) {
+      sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+    }
+  } catch (e) {
+    startupError = "Couldn't set up the connection to Supabase: " + (e && e.message ? e.message : e);
   }
 
   var app = document.getElementById("app");
@@ -629,6 +636,10 @@
   // ---------- app shell ----------
 
   function render() {
+    if (startupError) {
+      app.innerHTML = headerHtml() + "<div class=\"card\"><h2 class=\"section-title\">Something went wrong loading the page</h2><p class=\"section-hint\">" + escapeHtml(startupError) + "</p></div>";
+      return;
+    }
     if (ui.ready === "unconfigured") {
       app.innerHTML = headerHtml() + "<div class=\"card\"><h2 class=\"section-title\">Almost there</h2><p class=\"section-hint\">This page needs its Supabase project connected. Open <code>config.js</code>, paste in your project URL and anon key, redeploy, and reload this page.</p></div>";
       return;
@@ -783,8 +794,12 @@
     render();
   });
 
-  loadState();
-  subscribeRealtime();
+  if (startupError) {
+    render();
+  } else {
+    loadState();
+    subscribeRealtime();
+  }
 })();
 </script>
 </body>
