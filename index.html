@@ -365,7 +365,7 @@ async function loadAdmin(pin){
     const d=await api.adminGet(pin);
     if(d.error){S.pinErr=d.error==="locked"?"Too many wrong tries. Wait 15 minutes and try again.":"That PIN isn’t right.";S.busy=false;S.mode="pin";render();return;}
     S.pin=pin;S.admin=d;S.mode="admin";S.busy=false;render();
-  }catch(e){S.pinErr="Couldn’t reach the server. Try again.";S.busy=false;S.mode="pin";render();}
+  }catch(e){S.pinErr="Couldn’t reach the server. Details: "+(e&&e.message?e.message:"unknown error");S.busy=false;S.mode="pin";render();}
 }
 
 /* ============ RENDER ============ */
