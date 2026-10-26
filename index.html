@@ -183,6 +183,33 @@ table.heat{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;
   .notebox{padding-left:1.1rem;}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+
+/* ---- progress + tools + links ---- */
+details.prog{background:var(--surface);border:1px solid var(--line);margin:0 0 1.4rem;}
+details.prog>summary{cursor:pointer;padding:.8rem 1.1rem;font-family:"Montserrat",sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;}
+.prows{padding:0 1.1rem .4rem;}
+.prow{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr) 3rem;gap:.2rem 1rem;align-items:center;padding:.7rem 0;border-top:1px solid var(--line);}
+.prow.mine{background:var(--gold-wash);margin:0 -1.1rem;padding:.7rem 1.1rem;}
+.pname b{font-family:"Montserrat",sans-serif;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;display:block;line-height:1.3;}
+.pbar{height:10px;background:var(--gold-tint);border-radius:1px;overflow:hidden;}
+.pbar i{display:block;height:100%;background:var(--gold-deep);}
+.ppct{font-family:"Montserrat",sans-serif;font-weight:700;font-size:.95rem;text-align:right;}
+.pmeta{grid-column:2/4;font-size:.93rem;color:var(--ink-soft);}
+.pwork{grid-column:2/4;display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;}
+.you{font-family:"Fanwood Text",serif;font-style:italic;color:var(--gold-deep);text-transform:none;letter-spacing:0;font-weight:400;font-size:.9rem;margin-left:.3rem;}
+.lead .need{color:var(--gap);}
+.done-panel{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);padding:.9rem 1.1rem;margin:1rem 0;}
+.done-panel p{margin:0;flex:1 1 16rem;font-size:.97rem;}
+.done-panel.ok{border-color:var(--gold);background:var(--gold-wash);}
+.slug{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.4rem 0;}
+.slug span{color:var(--ink-soft);font-size:.9rem;}
+.slug input{background:var(--bg);border:1px solid var(--line);padding:.4rem .6rem;border-radius:2px;flex:1 1 14rem;max-width:22rem;}
+@media (max-width:760px){
+  .prow{grid-template-columns:1fr 3rem;}
+  .pname{grid-column:1/-1;}
+  .pbar{grid-column:1;}
+  .pmeta,.pwork{grid-column:1/-1;}
+}
 </style>
 </head>
 <body>
@@ -191,7 +218,6 @@ table.heat{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;
 "use strict";
 /* ============ CONFIG ============ */
 // Leave both blank to run in DEMO mode (sample data, nothing saved).
-// To go live, paste your Supabase Project URL and anon/publishable key here.
 const CONFIG={SUPABASE_URL:"https://thayfodkaireqjtsnhhd.supabase.co",SUPABASE_ANON_KEY:"sb_publishable__3Oxqcw9mCsp8mu0Zm9_1g_OsQEDlZU"};
 const DEMO=!CONFIG.SUPABASE_URL;
 
@@ -247,6 +273,8 @@ const SPACES=[["Divine","Personal"],["Intimate","2–5"],["Family","8–20"],["S
 const LEADERS=["Self","Multiplying disciple","Group leader","Staff or pastor"];
 const unitsOf=kind=>kind==="assim"?AM_UNITS:STAGES;
 
+const TOOL_KINDS=["Existing at Summit","Existing from outside","Needs to be created"];
+
 /* ============ HELPERS ============ */
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=id=>document.getElementById(id);
@@ -255,6 +283,7 @@ const indLabel=i=>OUTCOMES[i.o].name+" · "+DIMS[i.d]+" · "+STAGES[i.s].name;
 const short=id=>OUTCOMES[IND[id].o].name+" · "+DIMS[IND[id].d];
 const spaceOpts=(sel,none)=>(none?'<option value="">'+none+"</option>":"")+SPACES.map(x=>'<option value="'+x[0]+'"'+(x[0]===sel?" selected":"")+">"+x[0]+" ("+x[1]+")</option>").join("");
 const leaderOpts=(sel,none)=>(none?'<option value="">'+none+"</option>":"")+LEADERS.map(x=>'<option'+(x===sel?" selected":"")+">"+x+"</option>").join("");
+const toolOpts=sel=>'<option value="">Not decided yet</option>'+TOOL_KINDS.map(x=>'<option'+(x===sel?" selected":"")+">"+x+"</option>").join("");
 
 /* ============ DATA LAYER ============ */
 function remoteApi(){
@@ -270,20 +299,22 @@ function remoteApi(){
     claimNote:(t,id,note)=>rpc("claim_note",{p_token:t,p_indicator:id,p_note:note}),
     stepSave:(t,step)=>rpc("step_save",{p_token:t,p_step:step}),
     stepDelete:(t,id)=>rpc("step_delete",{p_token:t,p_id:id}),
-    adminGet:pin=>rpc("admin_get",{p_pin:pin}),
-    adminRotate:(pin,team)=>rpc("admin_rotate_token",{p_pin:pin,p_team:team})
+    flagSet:(t,key,done)=>rpc("flag_set",{p_token:t,p_key:key,p_done:done}),
+    adminGet:k=>rpc("admin_get",{p_key:k}),
+    adminSetToken:(k,team,nw)=>rpc("admin_set_token",{p_key:k,p_team:team,p_new:nw})
   };
 }
 function mockApi(){
   const day=86400000,ago=n=>new Date(Date.now()-n*day).toISOString();
   const M={teams:[
-    {id:"gospel",name:"Gospel Story",abbr:"GS",kind:"category",token:"gospel"},
-    {id:"knowing",name:"Knowing God",abbr:"KG",kind:"category",token:"knowing"},
-    {id:"communion",name:"Communion with God",abbr:"CG",kind:"category",token:"communion"},
-    {id:"community",name:"Life in Community",abbr:"LC",kind:"category",token:"community"},
-    {id:"mission",name:"Life on Mission",abbr:"LM",kind:"category",token:"mission"},
-    {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assim"}
+    {id:"gospel",name:"Gospel Story",abbr:"GS",kind:"category",token:"gospel-story",claim_done:true,units_done:[0]},
+    {id:"knowing",name:"Knowing God",abbr:"KG",kind:"category",token:"knowing-god",claim_done:true,units_done:[]},
+    {id:"communion",name:"Communion with God",abbr:"CG",kind:"category",token:"communion-with-god",claim_done:false,units_done:[]},
+    {id:"community",name:"Life in Community",abbr:"LC",kind:"category",token:"life-in-community",claim_done:false,units_done:[]},
+    {id:"mission",name:"Life on Mission",abbr:"LM",kind:"category",token:"life-on-mission",claim_done:false,units_done:[]},
+    {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assimilation-and-membership",claim_done:false,units_done:[]}
   ],claims:[],steps:[]};
+  M.teams.forEach((t,i)=>t.updated_at=ago(2+i));
   const rules={gospel:[[2,"01","0123"],[2,"2","01"]],knowing:[[0,"0","0123"],[1,"0","0123"],[2,"0","23"],[4,"0","12"]],communion:[[0,"12","0123"],[1,"1","0123"],[1,"2","01"]],community:[[3,"01","0123"],[1,"2","123"],[4,"2","23"]],mission:[[2,"2","123"],[3,"2","123"],[3,"0","123"]]};
   Object.entries(rules).forEach(([t,rs])=>rs.forEach(([o,ds,ss])=>[...ds].forEach(d=>[...ss].forEach(s=>M.claims.push({team_id:t,indicator:o+"."+d+"."+s,note:"",updated_at:ago(3+Math.floor(Math.random()*20))})))));
   const setNote=(t,id,n)=>{const c=M.claims.find(x=>x.team_id===t&&x.indicator===id);if(c)c.note=n;};
@@ -291,81 +322,95 @@ function mockApi(){
   setNote("gospel","2.2.0","Practice explaining it in one minute with a leader.");
   setNote("knowing","0.0.0","Five simple truths about God a new disciple can retell.");
   let n=0;const uid=()=>"demo-"+(++n)+"-"+Math.random().toString(36).slice(2,7);
-  const S=(team,unit,name,desc,is,il,ss,sl,inds)=>M.steps.push({id:uid(),team_id:team,unit,name,description:desc,ideal_space:is,ideal_leader:il,secondary_space:ss||null,secondary_leader:sl||null,indicators:inds||[],created_at:ago(10-M.steps.length),updated_at:ago(2+M.steps.length)});
-  S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying disciple","Family","Group leader",["2.0.0","2.2.0"]);
-  S("gospel",0,"One-page gospel card","A pocket-size outline anyone can hand to a friend. It lowers the bar for sharing, so a brand-new disciple can start without a script.","Scattered","Self","Intimate","Multiplying disciple",["2.2.0"]);
+  const S=(team,unit,name,desc,is,il,ss,sl,inds,tool,tk)=>M.steps.push({id:uid(),team_id:team,unit,name,description:desc,ideal_space:is,ideal_leader:il,secondary_space:ss||null,secondary_leader:sl||null,indicators:inds||[],tool:tool||"",tool_kind:tk||null,created_at:ago(10-M.steps.length),updated_at:ago(1+M.steps.length)});
+  S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying disciple","Family","Group leader",["2.0.0","2.2.0"],"Gospel conversation guide (3 short conversations)","Needs to be created");
+  S("gospel",0,"One-page gospel card","A pocket-size outline anyone can hand to a friend. It lowers the bar for sharing, so a brand-new disciple can start without a script.","Scattered","Self","Intimate","Multiplying disciple",["2.2.0"],"Pocket card (print)","Needs to be created");
   S("gospel",1,"Your story inside God’s story","Guided sessions that place a personal story on the biblical storyline. It’s here so growing disciples see where they fit.","Family","Group leader","Gathered","Staff or pastor",["2.0.1"]);
-  S("knowing",0,"Who is God? Five simple truths","Five short truths a new disciple can retell. It builds the first layer of theological clarity without overwhelming them.","Family","Group leader","Intimate","Multiplying disciple",["0.0.0"]);
+  S("knowing",0,"Who is God? Five simple truths","Five short truths a new disciple can retell. It builds the first layer of theological clarity without overwhelming them.","Family","Group leader","Intimate","Multiplying disciple",["0.0.0"],"Knowing God (J.I. Packer), ch. 1–5","Existing from outside");
   S("assim",1,"Welcome table and first conversation","A friendly table and one real conversation on a first Sunday. It’s here so no guest leaves without being known by name.","Gathered","Group leader","Scattered","Multiplying disciple");
-  S("assim",4,"Membership class (interim 1.0)","A facilitator-led class covering covenant, serving, and next steps. It’s here to turn interest into a clear commitment.","Gathered","Staff or pastor","Family","Group leader");
-  const wait=v=>new Promise(r=>setTimeout(()=>r(v),90));
-  const team=id=>M.teams.find(t=>t.token===id);
-  const fails=[];
+  S("assim",4,"Membership class (interim 1.0)","A facilitator-led class covering covenant, serving, and next steps. It’s here to turn interest into a clear commitment.","Gathered","Staff or pastor","Family","Group leader",[],"Membership 1.0 handout","Existing at Summit");
+  const prog=()=>M.teams.map(t=>{
+    const U=t.kind==="assim"?5:4,cl=M.claims.filter(c=>c.team_id===t.id),outcomes={};
+    cl.forEach(c=>{const o=c.indicator.split(".")[0];outcomes[o]=(outcomes[o]||0)+1;});
+    const st=M.steps.filter(s=>s.team_id===t.id);
+    const times=[...cl.map(c=>c.updated_at),...st.map(s=>s.updated_at),t.updated_at].filter(Boolean).sort();
+    return {id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,units_done:t.units_done.slice(),claimed:cl.length,outcomes,
+      steps:Array.from({length:U},(_,u)=>st.filter(s=>s.unit===u).length),steps_total:st.length,tools_done:st.filter(s=>s.tool&&s.tool.trim()).length,last_edit:times[times.length-1]};
+  });
+  const wait=v=>new Promise(r=>setTimeout(()=>r(JSON.parse(JSON.stringify(v))),90));
+  const team=tk=>M.teams.find(t=>t.token===tk);
   return {
     teamGet:async tk=>{const t=team(tk);if(!t)return wait({error:"bad_token"});
       const claims={};M.claims.filter(c=>c.team_id===t.id).forEach(c=>claims[c.indicator]={note:c.note});
       const others={};M.claims.filter(c=>c.team_id!==t.id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(M.teams.find(x=>x.id===c.team_id).abbr);});
-      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},claims,steps:JSON.parse(JSON.stringify(M.steps.filter(s=>s.team_id===t.id))),others});},
+      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},flags:{claim_done:t.claim_done,units_done:t.units_done},claims,steps:M.steps.filter(s=>s.team_id===t.id),others,progress:prog()});},
     claimSet:async(tk,id,on)=>{const t=team(tk);if(t.kind!=="category")return wait({error:"not_allowed"});
       const i=M.claims.findIndex(c=>c.team_id===t.id&&c.indicator===id);
       if(on&&i<0)M.claims.push({team_id:t.id,indicator:id,note:"",updated_at:new Date().toISOString()});
       if(!on&&i>=0)M.claims.splice(i,1);return wait({ok:true});},
     claimNote:async(tk,id,note)=>{setNote(team(tk).id,id,note);return wait({ok:true});},
-    stepSave:async(tk,st)=>{const t=team(tk);const now=new Date().toISOString();
-      if(st.id){const s=M.steps.find(x=>x.id===st.id&&x.team_id===t.id);Object.assign(s,st,{secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,updated_at:now});return wait({ok:true,id:s.id});}
-      const s=Object.assign({},st,{id:uid(),team_id:t.id,secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,created_at:now,updated_at:now});M.steps.push(s);return wait({ok:true,id:s.id});},
+    stepSave:async(tk,st)=>{const t=team(tk),now=new Date().toISOString();
+      const clean={secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,tool_kind:st.tool_kind||null,tool:(st.tool||"").trim()};
+      if(st.id){const s=M.steps.find(x=>x.id===st.id&&x.team_id===t.id);Object.assign(s,st,clean,{updated_at:now});return wait({ok:true,id:s.id});}
+      const s=Object.assign({},st,clean,{id:uid(),team_id:t.id,created_at:now,updated_at:now});M.steps.push(s);return wait({ok:true,id:s.id});},
     stepDelete:async(tk,id)=>{M.steps=M.steps.filter(s=>!(s.id===id&&s.team_id===team(tk).id));return wait({ok:true});},
-    adminGet:async pin=>{
-      const recent=fails.filter(t=>Date.now()-t<900000);
-      if(recent.length>=5)return wait({error:"locked"});
-      if(pin!=="1234"){fails.push(Date.now());return wait({error:"wrong_pin"});}
-      return wait(JSON.parse(JSON.stringify({teams:M.teams,claims:M.claims,steps:M.steps})));},
-    adminRotate:async()=>wait({ok:true,token:"demo"})
+    flagSet:async(tk,key,done)=>{const t=team(tk);t.updated_at=new Date().toISOString();
+      if(key==="claim")t.claim_done=!!done;
+      else{const n=+key.slice(4);t.units_done=t.units_done.filter(x=>x!==n);if(done)t.units_done.push(n);t.units_done.sort();}
+      return wait({ok:true});},
+    adminGet:async k=>{if(k!=="admin-demo")return wait({error:"bad_key"});return wait({teams:M.teams,claims:M.claims,steps:M.steps,progress:prog()});},
+    adminSetToken:async(k,tm,nw)=>wait({ok:true,token:nw})
   };
 }
 const api=DEMO?mockApi():remoteApi();
 
 /* ============ STATE ============ */
-const S={mode:"landing",token:null,data:null,pin:null,admin:null,tab:"ws",stage:0,adminTab:"overview",adminTeam:"gospel",sel:null,editing:null,confirmDel:null,confirmRot:null,stepsStage:0,msg:"",busy:false,loadErr:"",pinErr:"",focus:null};
-let saveTimer=null,noteTimers={};
+const S={mode:"landing",token:null,key:null,data:null,admin:null,progress:null,tab:"ws",stage:0,adminTab:"overview",adminTeam:"gospel",sel:null,editing:null,confirmDel:null,stepsStage:0,msg:"",loadErr:"",focus:null};
+let saveTimer=null,noteTimers={},progTimer=null;
 function setSave(state){
   const el=$("savechip");if(!el)return;
   el.className=state==="error"?"err":"";
   el.textContent=state==="saving"?"Saving…":state==="saved"?"Saved ✓":state==="error"?"Not saved":"";
   clearTimeout(saveTimer);
-  if(state==="saved")saveTimer=setTimeout(()=>{const e=$("savechip");if(e){e.textContent="";}},2200);
+  if(state==="saved")saveTimer=setTimeout(()=>{const e=$("savechip");if(e)e.textContent="";},2200);
 }
-async function track(p){setSave("saving");try{const r=await p;if(r&&r.error)throw new Error(r.error);setSave("saved");return r;}catch(e){setSave("error");throw e;}}
+async function track(p){setSave("saving");try{const r=await p;if(r&&r.error)throw new Error(r.error);setSave("saved");queueProgress();return r;}catch(e){setSave("error");throw e;}}
+function queueProgress(){clearTimeout(progTimer);progTimer=setTimeout(refreshProgress,800);}
+async function refreshProgress(){
+  try{
+    if(S.mode==="team"){const d=await api.teamGet(S.token);if(!d.error){S.progress=d.progress;paintProgress();}}
+    else if(S.mode==="admin"){const d=await api.adminGet(S.key);if(!d.error){S.admin=d;S.progress=d.progress;paintProgress();}}
+  }catch(e){}
+}
+function paintProgress(){const el=$("progress");if(el)el.innerHTML=progressInner();}
 
 /* ============ BOOT ============ */
 async function boot(){
-  const q=new URLSearchParams(location.search);
   if(DEMO){await goDemo("gospel","build");return;}
-  if(q.get("t")){await loadTeam(q.get("t"));}
-  else if(q.has("admin")||location.hash==="#admin"){S.mode="pin";render();}
-  else{S.mode="landing";render();}
+  const q=new URLSearchParams(location.search);
+  let slug=(q.get("t")||decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g,"")).toLowerCase();
+  if(!slug||slug==="index.html"){S.mode="landing";render();return;}
+  await resolveSlug(slug);
 }
-async function goDemo(who,tab){
-  S.sel=null;S.editing=null;S.stage=0;S.adminTab="overview";S.pin=null;S.admin=null;
-  if(who==="admin"){S.mode="pin";S.pinErr="";render();return;}
-  S.tab=tab||"ws";
-  await loadTeam(who);
-}
-async function loadTeam(token){
-  S.token=token;S.mode="loading";render();
+async function resolveSlug(slug){
+  S.mode="loading";render();
   try{
-    const d=await api.teamGet(token);
-    if(d.error){S.mode="bad";render();return;}
-    S.data=d;S.mode="team";if(d.team.kind==="assim")S.tab="build";render();
+    const d=await api.teamGet(slug);
+    if(!d.error){S.token=slug;S.data=d;S.progress=d.progress;S.mode="team";S.tab=d.team.kind==="assim"?"build":"ws";S.stage=0;render();return;}
+    const a=await api.adminGet(slug);
+    if(!a.error){S.key=slug;S.admin=a;S.progress=a.progress;S.mode="admin";render();return;}
+    S.mode="bad";render();
   }catch(e){S.mode="bad";S.loadErr=e.message;render();}
 }
-async function loadAdmin(pin){
-  S.busy=true;S.pinErr="";render();
-  try{
-    const d=await api.adminGet(pin);
-    if(d.error){S.pinErr=d.error==="locked"?"Too many wrong tries. Wait 15 minutes and try again.":"That PIN isn’t right.";S.busy=false;S.mode="pin";render();return;}
-    S.pin=pin;S.admin=d;S.mode="admin";S.busy=false;render();
-  }catch(e){S.pinErr="Couldn’t reach the server. Details: "+(e&&e.message?e.message:"unknown error");S.busy=false;S.mode="pin";render();}
+async function goDemo(who,tab){
+  S.sel=null;S.editing=null;S.stage=0;S.adminTab="overview";S.msg="";
+  if(who==="admin"){await resolveDemoAdmin();return;}
+  S.token=({gospel:"gospel-story",knowing:"knowing-god",communion:"communion-with-god",community:"life-in-community",mission:"life-on-mission",assim:"assimilation-and-membership"})[who];
+  S.mode="loading";render();
+  const d=await api.teamGet(S.token);S.data=d;S.progress=d.progress;S.tab=d.team.kind==="assim"?"build":(tab||"ws");S.mode="team";render();
+}
+async function resolveDemoAdmin(){
+  const a=await api.adminGet("admin-demo");S.key="admin-demo";S.admin=a;S.progress=a.progress;S.mode="admin";render();
 }
 
 /* ============ RENDER ============ */
@@ -378,38 +423,61 @@ function header(){
   return '<header class="bar"><div class="bar-in"><div class="brand"><b>Summit Church</b><span>Disciple-Making Pathway · Build Hub</span></div><div class="bar-r"><span class="who">'+who+'</span><span id="savechip" role="status" aria-live="polite"></span></div></div></header>';
 }
 function demoBar(){
-  const cur=S.mode==="admin"||S.mode==="pin"?"admin":(S.data&&S.data.team.id)||"gospel";
-  const opts=[["gospel","Gospel Story team"],["knowing","Knowing God team"],["communion","Communion with God team"],["community","Life in Community team"],["mission","Life on Mission team"],["assim","Assimilation & Membership team"],["admin","Admin (PIN 1234)"]];
-  return '<div class="demo"><div class="demo-in"><b class="sans" style="font-size:.64rem;letter-spacing:.09em;text-transform:uppercase">Demo</b><span>Sample data, nothing is saved. In the live version each team opens its own private link.</span><label>Viewing as <select id="demoWho" data-a="demoWho">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+o[1]+"</option>").join("")+"</select></label></div></div>";
+  const cur=S.mode==="admin"?"admin":(S.data&&S.data.team.id)||"gospel";
+  const opts=[["gospel","Gospel Story team"],["knowing","Knowing God team"],["communion","Communion with God team"],["community","Life in Community team"],["mission","Life on Mission team"],["assim","Assimilation & Membership team"],["admin","Admin"]];
+  return '<div class="demo"><div class="demo-in"><b class="sans" style="font-size:.64rem;letter-spacing:.09em;text-transform:uppercase">Demo</b><span>Sample data, nothing is saved.</span><label>Viewing as <select id="demoWho">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+o[1]+"</option>").join("")+"</select></label></div></div>";
 }
 function body(){
   switch(S.mode){
-    case "landing":return '<div class="center"><h1>Build Hub</h1><p class="lbl" style="margin-top:1rem">Open the private link your team lead sent you to get to your team’s workspace.</p></div>';
+    case "landing":return '<div class="center"><h1>Build Hub</h1><p class="lbl" style="margin-top:1rem">Open the link your team lead sent you to get to your team’s workspace.</p></div>';
     case "loading":return '<div class="center"><p class="lbl">Loading…</p></div>';
-    case "bad":return '<div class="center"><h1>Link not valid</h1><p class="lbl" style="margin-top:1rem">This link doesn’t match a team. Ask Jutty for a fresh one.</p>'+(S.loadErr?'<p class="sub">'+esc(S.loadErr)+"</p>":"")+"</div>";
-    case "pin":return pinView();
+    case "bad":return '<div class="center"><h1>Link not found</h1><p class="lbl" style="margin-top:1rem">This link doesn’t match a team. Check the spelling, or ask Jutty for the right one.</p>'+(S.loadErr?'<p class="sub">'+esc(S.loadErr)+"</p>":"")+"</div>";
     case "team":return teamView();
     case "admin":return adminView();
   }
   return "";
 }
-function pinView(){
-  return '<div class="center"><h1>Admin</h1><p class="lbl" style="margin:1rem 0">Enter your 4-digit PIN.</p><div class="field" style="align-items:center"><label for="pin" class="sub" style="position:absolute;left:-9999px">PIN</label><input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]*"'+(S.busy?" disabled":"")+'></div>'+(S.pinErr?'<p class="err" role="alert">'+esc(S.pinErr)+"</p>":"")+'<p><button class="btn" data-a="pinGo"'+(S.busy?" disabled":"")+">"+(S.busy?"Checking…":"Open admin")+"</button></p></div>";
+
+/* ---------- Progress panel (everyone) ---------- */
+function phases(p){
+  const cat=p.kind==="category",n=cat?4:5;
+  const build=(p.units_done||[]).filter(u=>u<n).length;
+  const tools=p.steps_total?p.tools_done/p.steps_total:0;
+  const list=cat?[p.claim_done?1:0,build/n,tools]:[build/n,tools];
+  return {build,n,pct:Math.round(list.reduce((a,b)=>a+b,0)/list.length*100)};
 }
+function progressInner(){
+  const list=S.progress||[];
+  const me=S.mode==="team"?S.data.team.id:null;
+  let h="<summary>Where every team is</summary><div class=\"prows\">";
+  list.forEach(p=>{
+    const ph=phases(p),cat=p.kind==="category";
+    const meta=(cat?"Worksheet "+(p.claim_done?"done":"in progress")+" · Stages "+ph.build+" of "+ph.n:"Components "+ph.build+" of "+ph.n)+" · Tools named "+p.tools_done+" of "+p.steps_total+" steps";
+    let work;
+    if(cat){
+      const o=Object.entries(p.outcomes||{}).sort((a,b)=>b[1]-a[1]);
+      work=o.length?o.map(([k,v])=>'<span class="chip plain">'+esc(OUTCOMES[+k].name)+" "+v+"</span>").join(""):'<span class="sub">Hasn’t claimed anything yet</span>';
+    }else{
+      const c=(p.steps||[]).map((v,i)=>v?'<span class="chip plain">'+esc(AM_UNITS[i].name)+" "+v+"</span>":"").join("");
+      work=c||'<span class="sub">No steps yet</span>';
+    }
+    h+='<div class="prow'+(p.id===me?" mine":"")+'"><div class="pname"><b>'+esc(p.name)+(p.id===me?'<span class="you">your team</span>':"")+'</b><span class="sub">Last edit '+fmtDate(p.last_edit)+'</span></div><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+ph.pct+'" aria-label="'+esc(p.name)+' progress"><i style="width:'+ph.pct+'%"></i></div><div class="ppct">'+ph.pct+'%</div><div class="pmeta">'+meta+'</div><div class="pwork">'+work+(p.steps_total?'<span class="sub">'+p.steps_total+(p.steps_total===1?" step":" steps")+" drafted</span>":"")+"</div></div>";
+  });
+  return h+"</div>";
+}
+const progressPanel=()=>'<details class="prog" id="progress" open>'+progressInner()+"</details>";
 
 /* ---------- Team workspace ---------- */
 function teamView(){
   const d=S.data,t=d.team,info=TEAM_INFO[t.id];
-  let h="<h1>"+esc(t.name)+'</h1><p class="pull">'+esc(info.def)+"</p>";
-  h+=workspace(d,false);
-  return h;
+  return "<h1>"+esc(t.name)+'</h1><p class="pull">'+esc(info.def)+"</p>"+progressPanel()+workspace(d,false);
 }
 function workspace(d,ro){
   const t=d.team;
   let h="";
   if(t.kind==="category"){
     h+='<div class="mainnav" role="tablist"><button role="tab" data-a="tab" data-v="ws"'+(S.tab==="ws"?' aria-current="page"':"")+'>Worksheet</button><button role="tab" data-a="tab" data-v="build"'+(S.tab==="build"?' aria-current="page"':"")+">Build</button></div>";
-  }else if(S.tab!=="build")S.tab="build";
+  }
   const tab=t.kind==="assim"?"build":S.tab;
   return h+(tab==="ws"?wsView(d,ro):bView(d,ro));
 }
@@ -437,16 +505,20 @@ function wsView(d,ro){
     });
     h+="</section>";
   });
-  if(!ro)h+='<p class="sub">'+total+" of 60 claimed in total.</p>";
+  if(!ro){
+    const done=d.flags.claim_done;
+    h+='<div class="done-panel'+(done?" ok":"")+'"><p><b>'+total+' of 60 claimed.</b> '+(done?"Your worksheet is marked complete. You can reopen it anytime.":"When your team has claimed everything it will produce, mark the worksheet complete.")+'</p><button class="btn'+(done?" ghost":"")+'" data-a="setFlag" data-v="claim">'+(done?"Reopen worksheet":"Mark worksheet complete")+"</button></div>";
+  }
   return h;
 }
-function stepCard(s,d,ro){
+function stepCard(s,ro){
   const sec=s.secondary_space||s.secondary_leader?[s.secondary_space,s.secondary_leader].filter(Boolean).join(" · "):"None";
+  const tool=s.tool&&s.tool.trim()?esc(s.tool)+(s.tool_kind?" · "+esc(s.tool_kind):""):'<span class="need">Not identified yet</span>';
   let h='<article class="step"><header><h4>'+esc(s.name)+"</h4>";
   if(!ro){
     h+=S.confirmDel===s.id?'<span class="acts"><span class="sub">Remove this step?</span><button class="link" data-a="delYes" data-id="'+s.id+'">Yes</button><button class="link" data-a="delNo">No</button></span>':'<span class="acts"><button class="link" data-a="edit" data-id="'+s.id+'">Edit</button><button class="link" data-a="del" data-id="'+s.id+'">Remove</button></span>';
   }
-  h+='</header><p class="desc">'+esc(s.description)+'</p><div class="lead"><b>Ideal</b><span>'+esc(s.ideal_space)+" · "+esc(s.ideal_leader)+"</span><b>Secondary</b><span>"+esc(sec)+"</span></div>";
+  h+='</header><p class="desc">'+esc(s.description)+'</p><div class="lead"><b>Ideal</b><span>'+esc(s.ideal_space)+" · "+esc(s.ideal_leader)+"</span><b>Secondary</b><span>"+esc(sec)+"</span><b>Tool</b><span>"+tool+"</span></div>";
   if(s.indicators&&s.indicators.length)h+='<div class="meta">'+s.indicators.map(id=>IND[id]?'<span class="chip plain" title="'+esc(indLabel(IND[id]))+'">'+esc(short(id))+"</span>":"").join("")+"</div>";
   return h+"</article>";
 }
@@ -458,25 +530,34 @@ function stepForm(d,s){
     '<div class="field"><label for="f-desc">What is it, and why is it here?</label><textarea id="f-desc" rows="4">'+esc(s.description||"")+"</textarea></div>"+
     '<fieldset><legend>Ideal</legend><div class="grid2"><div class="field"><label for="f-is">Space</label><select id="f-is">'+spaceOpts(s.ideal_space||"Family")+'</select></div><div class="field"><label for="f-il">Leader</label><select id="f-il">'+leaderOpts(s.ideal_leader||"Group leader")+"</select></div></div></fieldset>"+
     '<fieldset><legend>Secondary (if there is one)</legend><div class="grid2"><div class="field"><label for="f-ss">Space</label><select id="f-ss">'+spaceOpts(s.secondary_space||"","None")+'</select></div><div class="field"><label for="f-sl">Leader</label><select id="f-sl">'+leaderOpts(s.secondary_leader||"","None")+"</select></div></div></fieldset>"+
+    '<fieldset><legend>The actual tool (fill in when you know it)</legend><div class="grid2"><div class="field"><label for="f-tk">Where it comes from</label><select id="f-tk">'+toolOpts(s.tool_kind||"")+'</select></div><div class="field"><label for="f-tool">Name it (title, author, or what needs to be built)</label><input id="f-tool" type="text" maxlength="500" value="'+esc(s.tool||"")+'"></div></div></fieldset>'+
     (cat?'<details class="opt"'+((s.indicators||[]).length?" open":"")+"><summary>Link to the descriptors it addresses (optional)</summary>"+(claimed.length?'<div class="checks" id="f-inds">'+claimed.map(i=>'<label><input type="checkbox" value="'+i.id+'"'+((s.indicators||[]).includes(i.id)?" checked":"")+"><span>"+esc(short(i.id))+": "+esc(i.text)+"</span></label>").join("")+"</div>":'<p class="sub">Claim descriptors on the Worksheet first and they’ll show up here.</p>')+"</details>":"")+
     '<div id="f-err" class="err" role="alert"></div><div class="row" style="margin:.4rem 0 0"><button class="btn" data-a="saveStep" data-id="'+esc(s.id||"")+'">Save step</button><button class="btn ghost" data-a="cancelStep">Cancel</button></div></div>';
 }
 function bView(d,ro){
   const st=S.stage,cat=d.team.kind==="category",U=unitsOf(d.team.kind);
-  let h=stageTabs(d,i=>{const n=d.steps.filter(x=>x.unit===i).length;return n+(n===1?" step":" steps");});
+  let h=stageTabs(d,i=>{const n=d.steps.filter(x=>x.unit===i).length;return n+(n===1?" step":" steps")+((d.flags.units_done||[]).includes(i)?" · done":"");});
   if(cat){const S0=STAGES[st];h+='<div class="stagehead"><h2>'+esc(S0.name)+"</h2><span>"+esc(S0.goal)+'</span><span class="say">'+esc(S0.obj)+": “"+esc(S0.say)+"”</span></div>";}
   else h+='<div class="stagehead"><h2>'+esc(U[st].name)+"</h2><span>"+esc(U[st].blurb)+"</span></div>";
-  if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. Intimate, Family, and Scattered are the key spaces.</p>';
+  if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. When you know the actual tool you’ll use, name it. Intimate, Family, and Scattered are the key spaces.</p>';
   if(cat){
     const claimed=INDS.filter(i=>i.s===st&&d.claims[i.id]);
     h+='<details class="ref"><summary>Your claimed descriptors at this stage ('+claimed.length+")</summary>"+(claimed.length?"<ul>"+claimed.map(i=>"<li><b>"+esc(short(i.id))+":</b> "+esc(i.text)+(d.claims[i.id].note?'<br><span class="sub">'+esc(d.claims[i.id].note)+"</span>":"")+"</li>").join("")+"</ul>":'<p class="sub" style="padding:0 1rem .8rem">Nothing claimed here yet. Use the Worksheet tab.</p>')+"</details>";
   }
   const steps=d.steps.filter(x=>x.unit===st);
   if(!steps.length&&S.editing!=="new")h+='<div class="empty">No steps for '+esc(U[st].name)+" yet.</div>";
-  steps.forEach(s=>{h+=(S.editing===s.id&&!ro)?stepForm(d,s):stepCard(s,d,ro);});
+  steps.forEach(s=>{h+=(S.editing===s.id&&!ro)?stepForm(d,s):stepCard(s,ro);});
   if(!ro){
     if(S.editing==="new")h+=stepForm(d,{});
     else if(!S.editing)h+='<p><button class="btn" data-a="newStep">Add a step</button></p>';
+  }
+  if(steps.length){
+    const wt=steps.filter(x=>x.tool&&x.tool.trim()).length;
+    h+='<p class="sub">Tools named: '+wt+" of "+steps.length+(wt<steps.length?" — name the rest as you decide them.":".")+"</p>";
+  }
+  if(!ro){
+    const done=(d.flags.units_done||[]).includes(st);
+    h+='<div class="done-panel'+(done?" ok":"")+'"><p>'+(done?"<b>"+esc(U[st].name)+"</b> is marked complete. You can reopen it anytime.":"Finished drafting steps for <b>"+esc(U[st].name)+"</b>? Mark it complete. Tools can be named afterward.")+'</p><button class="btn'+(done?" ghost":"")+'" data-a="setFlag" data-v="unit'+st+'">'+(done?"Reopen":"Mark complete")+"</button></div>";
   }
   return h;
 }
@@ -486,7 +567,7 @@ function adminTeamData(id){
   const A=S.admin,t=A.teams.find(x=>x.id===id),claims={},others={};
   A.claims.filter(c=>c.team_id===id).forEach(c=>claims[c.indicator]={note:c.note});
   A.claims.filter(c=>c.team_id!==id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(A.teams.find(x=>x.id===c.team_id).abbr);});
-  return {team:t,claims,others,steps:A.steps.filter(s=>s.team_id===id)};
+  return {team:t,flags:{claim_done:t.claim_done,units_done:t.units_done||[]},claims,others,steps:A.steps.filter(s=>s.team_id===id)};
 }
 function adminView(){
   const tabs=[["overview","Overview"],["teams","Teams"],["steps","All steps"],["links","Links and export"]];
@@ -502,13 +583,8 @@ const claimersOf=id=>cats().filter(t=>S.admin.claims.some(c=>c.team_id===t.id&&c
 function overview(){
   const A=S.admin;
   const gap=INDS.filter(i=>!claimersOf(i.id).length),over=INDS.filter(i=>claimersOf(i.id).length>1);
-  let h='<div class="strip"><div><b>'+(60-gap.length)+'<small class="sans" style="font-size:.9rem;font-weight:500"> of 60</small></b><span>indicators claimed</span></div><div><b>'+gap.length+"</b><span>unclaimed</span></div><div><b>"+over.length+"</b><span>claimed by two or more</span></div><div><b>"+A.steps.length+"</b><span>steps written</span></div></div>";
-  h+='<h3 style="margin-bottom:.6rem">Team progress</h3><div class="scroll"><table class="tbl"><thead><tr><th>Team</th><th>Claimed</th><th>Steps by stage</th><th>Last edit</th></tr></thead><tbody>'+A.teams.map(t=>{
-    const U=unitsOf(t.kind),counts=U.map((_,i)=>A.steps.filter(s=>s.team_id===t.id&&s.unit===i).length);
-    const cl=A.claims.filter(c=>c.team_id===t.id).length;
-    const times=[...A.claims.filter(c=>c.team_id===t.id).map(c=>c.updated_at),...A.steps.filter(s=>s.team_id===t.id).map(s=>s.updated_at)].sort();
-    return "<tr><td><b>"+esc(t.name)+"</b></td><td>"+(t.kind==="category"?cl+" of 60":'<span class="sub">n/a</span>')+"</td><td>"+U.map((u,i)=>'<span class="sub">'+esc(t.kind==="assim"?u.name.split(" ")[0]:STAGES[i].name.split(" ")[0])+"</span> <b>"+counts[i]+"</b>").join(" &nbsp;·&nbsp; ")+"</td><td>"+fmtDate(times[times.length-1])+"</td></tr>";
-  }).join("")+"</tbody></table></div>";
+  let h=progressPanel();
+  h+='<div class="strip"><div><b>'+(60-gap.length)+'<small class="sans" style="font-size:.9rem;font-weight:500"> of 60</small></b><span>indicators claimed</span></div><div><b>'+gap.length+"</b><span>unclaimed</span></div><div><b>"+over.length+"</b><span>claimed by two or more</span></div><div><b>"+A.steps.length+"</b><span>steps written</span></div></div>";
   h+='<h3 style="margin:1.8rem 0 .4rem">Coverage map</h3><div class="legend"><span><i class="sw gap"></i>Unclaimed</span><span><i class="sw one"></i>One team</span><span><i class="sw over"></i>Two or more teams</span></div>';
   h+='<div class="scroll"><table class="heat"><thead><tr><th></th>'+STAGES.map(s=>"<th>"+esc(s.name)+"</th>").join("")+"</tr></thead><tbody>";
   OUTCOMES.forEach((o,oi)=>{
@@ -542,10 +618,7 @@ function overview(){
 function teamsTab(){
   const A=S.admin;
   let h='<div class="tabs" role="tablist">'+A.teams.map(t=>'<button role="tab" data-a="ateam" data-v="'+t.id+'" aria-selected="'+(t.id===S.adminTeam)+'"><b>'+esc(t.name)+"</b><span>"+(t.kind==="category"?A.claims.filter(c=>c.team_id===t.id).length+" claimed · ":"")+A.steps.filter(s=>s.team_id===t.id).length+" steps</span></button>").join("")+"</div>";
-  const d=adminTeamData(S.adminTeam);
-  if(d.team.kind==="assim"){S.tab="build";}
-  h+=workspace(d,true);
-  return h;
+  return h+workspace(adminTeamData(S.adminTeam),true);
 }
 function allSteps(){
   const A=S.admin;
@@ -556,24 +629,24 @@ function allSteps(){
   if(list.length){
     const by=sp=>list.filter(s=>s.ideal_space===sp).length;
     const staff=list.filter(s=>s.ideal_leader==="Staff or pastor").length;
-    h+='<div class="panel"><h3>Where these steps ideally happen</h3><div class="meta" style="margin:0">'+SPACES.map(x=>'<span class="chip">'+x[0]+" "+by(x[0])+"</span>").join("")+'<span class="chip plain">Staff or pastor-led '+staff+" of "+list.length+"</span></div></div>";
+    const tools=list.filter(s=>s.tool&&s.tool.trim()).length;
+    h+='<div class="panel"><h3>Where these steps ideally happen</h3><div class="meta" style="margin:0">'+SPACES.map(x=>'<span class="chip">'+x[0]+" "+by(x[0])+"</span>").join("")+'<span class="chip plain">Staff or pastor-led '+staff+" of "+list.length+'</span><span class="chip plain">Tools named '+tools+" of "+list.length+"</span></div></div>";
   }else h+='<div class="empty">No steps here yet.</div>';
-  const groups=A.teams.filter(t=>list.some(s=>s.team_id===t.id));
-  groups.forEach(t=>{
+  A.teams.filter(t=>list.some(s=>s.team_id===t.id)).forEach(t=>{
     h+='<h3 style="margin:1.2rem 0 .6rem">'+esc(t.name)+"</h3>";
     const U=unitsOf(t.kind);
-    list.filter(s=>s.team_id===t.id).forEach(s=>{h+=(cur==="am"?'<p class="sub" style="margin:.2rem 0">'+esc(U[s.unit].name)+"</p>":"")+stepCard(s,null,true);});
+    list.filter(s=>s.team_id===t.id).forEach(s=>{h+=(cur==="am"?'<p class="sub" style="margin:.2rem 0">'+esc(U[s.unit].name)+"</p>":"")+stepCard(s,true);});
   });
   return h;
 }
 function linksTab(){
   const A=S.admin;
-  const base=DEMO?"https://your-site.example/":location.origin+location.pathname;
-  let h='<p class="note">Send each team lead their private link. No login needed. Anyone with the link can edit that team’s work, so share it only with the team. “New link” stops the old one from working.</p>';
+  const base=DEMO?"https://your-site.example/":location.origin+"/";
+  let h='<p class="note">Each team’s link is just your site address plus a name. Anyone who knows or guesses a team’s link can open and edit that team’s workspace, so share them only with the teams. You can rename any link below.</p>';
   A.teams.forEach(t=>{
-    const url=base+"?t="+(DEMO?"…":t.token);
-    h+='<div class="linkrow"><b class="sans" style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">'+esc(t.name)+"</b><code>"+esc(url)+'</code><div class="row" style="margin:0"><button class="btn small" data-a="copyLink" data-v="'+esc(t.token)+'"'+(DEMO?" disabled":"")+">Copy link</button>"+(S.confirmRot===t.id?'<span class="sub">Replace this link?</span><button class="link" data-a="rotYes" data-id="'+t.id+'">Yes</button><button class="link" data-a="rotNo">No</button>':'<button class="btn small ghost" data-a="rot" data-id="'+t.id+'"'+(DEMO?" disabled":"")+">New link</button>")+"</div></div>";
+    h+='<div class="linkrow"><b class="sans" style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">'+esc(t.name)+'</b><div class="slug"><span>'+esc(base)+'</span><input id="lk-'+t.id+'" value="'+esc(t.token)+'" aria-label="Link name for '+esc(t.name)+'" maxlength="60"><button class="btn small ghost" data-a="saveLink" data-id="'+t.id+'"'+(DEMO?" disabled":"")+'>Save</button><button class="btn small" data-a="copyLink" data-v="'+esc(t.token)+'">Copy link</button></div></div>';
   });
+  h+='<p class="sub">Link names use lowercase letters, numbers, and dashes. Your own admin address is separate and unchanged.</p>';
   h+='<h3 style="margin:1.8rem 0 .6rem">Export for analysis</h3><div class="row"><button class="btn" data-a="exportJson">Download everything (JSON)</button><button class="btn ghost" data-a="exportCsv">Download steps (CSV)</button><button class="btn ghost" data-a="copyJson">Copy JSON</button></div>'+(S.msg?'<p class="sub" role="status">'+esc(S.msg)+"</p>":"");
   return h;
 }
@@ -585,16 +658,16 @@ function download(name,text,type){
 function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportData(){
   const A=S.admin;
-  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind})),claims:A.claims,steps:A.steps};
+  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,units_done:t.units_done})),claims:A.claims,steps:A.steps,progress:A.progress};
 }
 function exportCsv(){
-  const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Addresses"]];
-  A.steps.forEach(s=>{const t=A.teams.find(x=>x.id===s.team_id);const U=unitsOf(t.kind);rows.push([t.name,U[s.unit].name,s.name,s.description,s.ideal_space,s.ideal_leader,s.secondary_space||"",s.secondary_leader||"",(s.indicators||[]).map(short).join("; ")]);});
+  const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Tool","Tool source","Addresses"]];
+  A.steps.forEach(s=>{const t=A.teams.find(x=>x.id===s.team_id);const U=unitsOf(t.kind);rows.push([t.name,U[s.unit].name,s.name,s.description,s.ideal_space,s.ideal_leader,s.secondary_space||"",s.secondary_leader||"",s.tool||"",s.tool_kind||"",(s.indicators||[]).map(short).join("; ")]);});
   return rows.map(r=>r.map(csvCell).join(",")).join("\n");
 }
 async function refreshAdmin(){
   setSave("saving");
-  try{const d=await api.adminGet(S.pin);if(d.error)throw new Error(d.error);S.admin=d;setSave("saved");render();}catch(e){setSave("error");}
+  try{const d=await api.adminGet(S.key);if(d.error)throw new Error(d.error);S.admin=d;S.progress=d.progress;setSave("saved");render();}catch(e){setSave("error");}
 }
 function flushNotes(){
   Object.keys(noteTimers).forEach(id=>{clearTimeout(noteTimers[id]);delete noteTimers[id];const el=document.querySelector('[data-note="'+id+'"]');if(el)saveNote(id,el.value);});
@@ -612,9 +685,6 @@ document.addEventListener("focusout",e=>{
   const id=e.target.dataset&&e.target.dataset.note;if(!id)return;
   if(noteTimers[id]){clearTimeout(noteTimers[id]);delete noteTimers[id];saveNote(id,e.target.value);}
 });
-document.addEventListener("keydown",e=>{
-  if(e.target.id==="pin"&&e.key==="Enter"){const v=e.target.value;if(/^\d{4}$/.test(v))loadAdmin(v);}
-});
 document.addEventListener("change",e=>{
   if(e.target.id==="demoWho")goDemo(e.target.value,"build");
 });
@@ -622,7 +692,6 @@ document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-a]");if(!el||el.tagName==="SELECT")return;
   const a=el.dataset.a,id=el.dataset.id,v=el.dataset.v;
   if(el.dataset.key)S.focus=el.dataset.key;
-  if(a==="pinGo"){const val=$("pin").value;if(!/^\d{4}$/.test(val)){S.pinErr="Enter exactly 4 digits.";render();return;}await loadAdmin(val);return;}
   if(a==="tab"){flushNotes();S.tab=v;S.editing=null;S.confirmDel=null;}
   else if(a==="stage"){flushNotes();S.stage=+v;S.editing=null;S.confirmDel=null;}
   else if(a==="claim"){
@@ -630,6 +699,14 @@ document.addEventListener("click",async e=>{
     if(on)d.claims[id]={note:""};else delete d.claims[id];
     render();
     try{await track(api.claimSet(S.token,id,on));}catch(err){if(on)delete d.claims[id];else d.claims[id]={note:""};render();}
+    return;
+  }
+  else if(a==="setFlag"){
+    const f=S.data.flags;let was,apply;
+    if(v==="claim"){was=f.claim_done;apply=x=>{f.claim_done=x;};}
+    else{const n=+v.slice(4);was=(f.units_done||[]).includes(n);apply=x=>{f.units_done=(f.units_done||[]).filter(u=>u!==n);if(x)f.units_done.push(n);};}
+    apply(!was);render();
+    try{await track(api.flagSet(S.token,v,!was));}catch(err){apply(was);render();}
     return;
   }
   else if(a==="newStep"){S.editing="new";S.confirmDel=null;S.focus="f-name";}
@@ -645,12 +722,12 @@ document.addEventListener("click",async e=>{
     const d=S.data,name=$("f-name").value.trim(),desc=$("f-desc").value.trim();
     if(!name){$("f-err").textContent="Give the step a name.";$("f-name").focus();return;}
     if(!desc){$("f-err").textContent="Say what it is and why it’s here.";$("f-desc").focus();return;}
-    const step={unit:S.stage,name,description:desc,ideal_space:$("f-is").value,ideal_leader:$("f-il").value,secondary_space:$("f-ss").value,secondary_leader:$("f-sl").value,indicators:[...document.querySelectorAll("#f-inds input:checked")].map(x=>x.value)};
+    const step={unit:S.stage,name,description:desc,ideal_space:$("f-is").value,ideal_leader:$("f-il").value,secondary_space:$("f-ss").value,secondary_leader:$("f-sl").value,tool:$("f-tool").value.trim(),tool_kind:$("f-tk").value,indicators:[...document.querySelectorAll("#f-inds input:checked")].map(x=>x.value)};
     if(id)step.id=id;
     el.disabled=true;
     try{
       const r=await track(api.stepSave(S.token,step));
-      const saved=Object.assign({},step,{id:r.id,secondary_space:step.secondary_space||null,secondary_leader:step.secondary_leader||null,updated_at:new Date().toISOString()});
+      const saved=Object.assign({},step,{id:r.id,secondary_space:step.secondary_space||null,secondary_leader:step.secondary_leader||null,tool_kind:step.tool_kind||null,updated_at:new Date().toISOString()});
       const i=d.steps.findIndex(s=>s.id===r.id);
       if(i>=0)d.steps[i]=Object.assign(d.steps[i],saved);else d.steps.push(saved);
       S.editing=null;
@@ -661,19 +738,22 @@ document.addEventListener("click",async e=>{
   else if(a==="sstage"){S.stepsStage=v==="am"?"am":+v;}
   else if(a==="sel"){S.sel=S.sel===id?null:id;}
   else if(a==="refresh"){await refreshAdmin();return;}
-  else if(a==="rot"){S.confirmRot=id;}
-  else if(a==="rotNo"){S.confirmRot=null;}
-  else if(a==="rotYes"){
-    S.confirmRot=null;
-    try{const r=await track(api.adminRotate(S.pin,id));if(r.token){S.admin.teams.find(t=>t.id===id).token=r.token;}}catch(err){}
+  else if(a==="saveLink"){
+    const val=$("lk-"+id).value.trim().toLowerCase();
+    try{
+      const r=await track(api.adminSetToken(S.key,id,val));
+      S.admin.teams.find(t=>t.id===id).token=r.token;S.msg="Link saved.";
+    }catch(err){S.msg=({taken:"That link is already in use.",bad_format:"Use 3 to 60 lowercase letters, numbers, and dashes.",bad_key:"Couldn’t verify admin access."})[err.message]||"Couldn’t save the link.";}
   }
-  else if(a==="copyLink"){try{await navigator.clipboard.writeText(location.origin+location.pathname+"?t="+v);S.msg="Link copied.";}catch(err){S.msg="Couldn’t copy. Select the link and copy it by hand.";}}
+  else if(a==="copyLink"){try{await navigator.clipboard.writeText(location.origin+"/"+v);S.msg="Link copied.";}catch(err){S.msg="Couldn’t copy. Select the link and copy it by hand.";}}
   else if(a==="exportJson"){try{download("pathway-build-export.json",JSON.stringify(exportData(),null,2),"application/json");S.msg="";}catch(err){S.msg="Download isn’t available here. Use Copy JSON.";}}
   else if(a==="exportCsv"){try{download("pathway-steps.csv",exportCsv(),"text/csv");S.msg="";}catch(err){S.msg="Download isn’t available here.";}}
   else if(a==="copyJson"){try{await navigator.clipboard.writeText(JSON.stringify(exportData(),null,2));S.msg="Copied. Paste it into chat for analysis.";}catch(err){S.msg="Couldn’t copy here.";}}
   render();
 });
+setInterval(()=>{if(!document.hidden&&(S.mode==="team"||S.mode==="admin"))refreshProgress();},60000);
 boot();
+
 </script>
 </body>
 </html>
