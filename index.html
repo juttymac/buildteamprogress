@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Disciple-Making Pathway Build Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Fanwood+Text:ital@0;1&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#F5F2EC; --surface:#FFFFFF; --ink:#494744; --ink-soft:#6B6862; --line:#D9D3C4;
+  --gold:#9C9067; --gold-deep:#7D724F; --gold-tint:#EBE5D4; --gold-wash:#F8F5EC;
+  --gap:#A4472F; --gap-tint:#F5E6E0; --on-deep:#FFFFFF;
+  --over-bg:#7D724F; --over-fg:#FFFFFF;
+  --bar-bg:#494744; --bar-fg:#FFFFFF; --bar-gold:#CDBF8C; --focus:#494744;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#262524; --surface:#31302D; --ink:#F1EEE7; --ink-soft:#BDB8AD; --line:#4B4742;
+    --gold:#B8AB7C; --gold-deep:#CDBF8C; --gold-tint:#443F33; --gold-wash:#3A372F;
+    --gap:#E58A72; --gap-tint:#47302A; --on-deep:#262524;
+    --over-bg:#B8AB7C; --over-fg:#262524;
+    --bar-bg:#1C1B1A; --bar-fg:#F1EEE7; --focus:#F1EEE7;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#262524; --surface:#31302D; --ink:#F1EEE7; --ink-soft:#BDB8AD; --line:#4B4742;
+  --gold:#B8AB7C; --gold-deep:#CDBF8C; --gold-tint:#443F33; --gold-wash:#3A372F;
+  --gap:#E58A72; --gap-tint:#47302A; --on-deep:#262524;
+  --over-bg:#B8AB7C; --over-fg:#262524;
+  --bar-bg:#1C1B1A; --bar-fg:#F1EEE7; --focus:#F1EEE7;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fanwood Text","Cormorant Garamond",Georgia,serif;font-size:18px;line-height:1.55;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar-bg);z-index:30;}
+h1,h2,h3,h4{font-family:"Montserrat","Helvetica Neue",Arial,sans-serif;text-transform:uppercase;margin:0;color:var(--ink);}
+h1{font-weight:700;letter-spacing:.06em;font-size:clamp(1.35rem,3.6vw,2rem);line-height:1.2;}
+h2{font-weight:700;letter-spacing:.06em;font-size:clamp(1.05rem,2.4vw,1.3rem);line-height:1.25;}
+h3{font-weight:500;letter-spacing:.09em;font-size:.82rem;line-height:1.35;}
+h4{font-weight:600;letter-spacing:.06em;font-size:.8rem;line-height:1.4;}
+p{margin:0 0 .6em;}
+button,input,select,textarea{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.sans{font-family:"Montserrat","Helvetica Neue",Arial,sans-serif;}
+.lbl{color:var(--ink-soft);font-size:.95rem;}
+.sub{font-size:.92rem;color:var(--ink-soft);}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--bar-bg);color:var(--bar-fg);}
+.bar-in{max-width:1100px;margin:0 auto;padding:.7rem 1.1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;}
+.brand{display:flex;flex-direction:column;line-height:1.15;}
+.brand b{font-family:"Montserrat",sans-serif;font-weight:700;letter-spacing:.14em;font-size:.95rem;text-transform:uppercase;}
+.brand span{font-family:"Montserrat",sans-serif;font-weight:500;letter-spacing:.12em;font-size:.62rem;color:var(--bar-gold);text-transform:uppercase;margin-top:.2rem;}
+.bar-r{display:flex;align-items:center;gap:.8rem;font-size:.9rem;}
+.who{color:var(--bar-gold);}
+#savechip{font-family:"Montserrat",sans-serif;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--bar-gold);padding:.15rem .5rem;border-radius:2px;color:var(--bar-gold);min-width:5.2rem;text-align:center;}
+#savechip.err{background:var(--gap);border-color:var(--gap);color:#fff;}
+.demo{background:var(--gold-tint);border-bottom:1px solid var(--line);font-size:.9rem;}
+.demo-in{max-width:1100px;margin:0 auto;padding:.4rem 1.1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;}
+.demo select{background:var(--surface);border:1px solid var(--line);padding:.25rem .4rem;border-radius:2px;}
+
+main{max-width:1100px;margin:0 auto;padding:1.6rem 1.1rem 4rem;}
+.pull{font-style:italic;color:var(--gold-deep);font-size:1.2rem;line-height:1.4;border-left:3px solid var(--gold);padding:.1rem 0 .1rem 1rem;margin:1rem 0 1.2rem;max-width:68ch;}
+.note{border-left:3px solid var(--gold);background:var(--gold-wash);padding:.6rem .9rem;margin:0 0 1rem;font-size:.97rem;}
+.note.warn{border-left-color:var(--gap);background:var(--gap-tint);}
+
+.btn{font-family:"Montserrat",sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;background:var(--gold-deep);color:var(--on-deep);border:1px solid var(--gold-deep);padding:.65rem 1rem;border-radius:2px;cursor:pointer;}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink-soft);}
+.btn.small{padding:.4rem .65rem;font-size:.62rem;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.link{background:none;border:0;padding:0;color:var(--gold-deep);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:.95rem;}
+.row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin:1rem 0;}
+
+.mainnav{display:flex;gap:4px;margin:1.2rem 0 0;border-bottom:1px solid var(--line);}
+.mainnav button{background:none;border:0;border-bottom:3px solid transparent;font-family:"Montserrat",sans-serif;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:.7rem 1rem;cursor:pointer;color:var(--ink-soft);}
+.mainnav button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--gold);}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:1.2rem 0 1rem;}
+.tabs button{flex:1 1 9rem;text-align:left;background:var(--surface);border:1px solid var(--line);padding:.6rem .8rem;cursor:pointer;}
+.tabs button b{display:block;font-family:"Montserrat",sans-serif;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;}
+.tabs button span{font-size:.9rem;color:var(--ink-soft);}
+.tabs button[aria-selected="true"]{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--on-deep);}
+.tabs button[aria-selected="true"] span{color:var(--on-deep);}
+.stagehead{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;align-items:baseline;margin-bottom:1rem;}
+.stagehead .say{font-style:italic;color:var(--gold-deep);}
+
+.oc{background:var(--surface);border:1px solid var(--line);margin-bottom:1rem;}
+.oc>header{padding:.8rem 1.1rem;border-bottom:1px solid var(--line);background:var(--gold-wash);}
+.oc>header p{margin:.25rem 0 0;font-size:.95rem;color:var(--ink-soft);}
+.ind{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;border-bottom:1px solid var(--line);}
+.ind:last-child{border-bottom:0;}
+.ind.on{background:var(--gold-wash);}
+.chk{display:grid;grid-template-columns:1.5rem 3.6rem minmax(0,1fr);gap:.7rem;align-items:center;text-align:left;background:none;border:0;padding:.8rem 1.1rem;cursor:pointer;width:100%;}
+.chk:disabled{cursor:default;}
+.box{width:1.3rem;height:1.3rem;border:2px solid var(--ink-soft);border-radius:2px;display:grid;place-items:center;font-size:.95rem;line-height:1;}
+.chk[aria-checked="true"] .box{background:var(--gold-deep);border-color:var(--gold-deep);color:var(--on-deep);}
+.chk .dim{font-family:"Montserrat",sans-serif;font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);}
+.side{display:flex;gap:.4rem;align-items:center;padding-right:1rem;flex-wrap:wrap;justify-content:flex-end;}
+.chip{display:inline-block;font-family:"Montserrat",sans-serif;font-size:.6rem;font-weight:600;letter-spacing:.06em;padding:.18rem .42rem;border:1px solid var(--gold);color:var(--gold-deep);border-radius:2px;background:var(--surface);}
+.chip.plain{border-color:var(--line);color:var(--ink-soft);}
+.notebox{grid-column:1/-1;padding:0 1.1rem .8rem 3.2rem;}
+
+.field{display:flex;flex-direction:column;gap:.2rem;margin-bottom:.7rem;}
+.field label{font-size:.95rem;color:var(--ink-soft);}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line);padding:.5rem .6rem;border-radius:2px;width:100%;}
+.field textarea{min-height:5rem;resize:vertical;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.2rem 1rem;}
+.panel{background:var(--surface);border:1px solid var(--line);padding:1.1rem 1.2rem;margin-bottom:1rem;}
+.panel h3{margin-bottom:.6rem;}
+.formbox{background:var(--surface);border:1px solid var(--gold);padding:1.1rem 1.2rem;margin:1rem 0;}
+.formbox fieldset{border:1px solid var(--line);margin:.2rem 0 .8rem;padding:.7rem .9rem .3rem;}
+.formbox legend{font-family:"Montserrat",sans-serif;font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;padding:0 .4rem;color:var(--gold-deep);}
+.checks{display:flex;flex-direction:column;gap:.3rem;max-height:15rem;overflow:auto;border:1px solid var(--line);padding:.5rem .7rem;background:var(--bg);}
+.checks label{display:flex;gap:.55rem;align-items:flex-start;font-size:.95rem;}
+.checks input{margin-top:.35rem;}
+details.opt{margin:.2rem 0 .8rem;}
+details.opt>summary{cursor:pointer;color:var(--gold-deep);font-size:.97rem;margin-bottom:.4rem;}
+.err{color:var(--gap);font-size:.95rem;margin:.3rem 0;}
+
+.step{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);padding:.9rem 1.1rem;margin-bottom:.7rem;}
+.step header{display:flex;justify-content:space-between;gap:1rem;align-items:start;}
+.step .desc{margin:.4rem 0 .6rem;white-space:pre-wrap;}
+.lead{display:grid;grid-template-columns:5.6rem minmax(0,1fr);gap:.2rem .6rem;font-size:.97rem;}
+.lead b{font-family:"Montserrat",sans-serif;font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);align-self:center;}
+.step .acts{display:flex;gap:.9rem;}
+.meta{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem;}
+.empty{padding:1.4rem;border:1px dashed var(--line);color:var(--ink-soft);text-align:center;margin-bottom:.8rem;}
+.ref{background:var(--gold-wash);border:1px solid var(--line);margin-bottom:1rem;}
+.ref>summary{cursor:pointer;padding:.7rem 1rem;font-family:"Montserrat",sans-serif;font-weight:600;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;}
+.ref ul{margin:0;padding:0 1rem .8rem 2.2rem;font-size:.97rem;}
+.ref li{margin:.25rem 0;}
+
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:var(--surface);margin:1.2rem 0 1.6rem;}
+.strip div{padding:.9rem 1.1rem;border-right:1px solid var(--line);}
+.strip div:last-child{border-right:0;}
+.strip b{display:block;font-family:"Montserrat",sans-serif;font-weight:700;font-size:1.6rem;line-height:1.1;}
+.strip span{color:var(--ink-soft);font-size:.95rem;}
+table.tbl{border-collapse:collapse;width:100%;background:var(--surface);border:1px solid var(--line);}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:.55rem .8rem;text-align:left;vertical-align:top;}
+.tbl thead th{font-family:"Montserrat",sans-serif;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;background:var(--gold-wash);}
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--surface);}
+.scroll>table.tbl{border:0;}
+.legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.92rem;color:var(--ink-soft);margin:.8rem 0 1rem;}
+.legend span{display:flex;align-items:center;gap:.4rem;}
+.sw{width:1.3rem;height:1rem;display:inline-block;border:1px solid var(--line);}
+.sw.gap{border:2px dashed var(--gap);background:var(--gap-tint);}
+.sw.one{background:var(--gold-tint);border-color:var(--gold);}
+.sw.over{background:var(--over-bg);border-color:var(--over-bg);}
+table.heat{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;}
+.heat th,.heat td{border-bottom:1px solid var(--line);padding:0;vertical-align:top;}
+.heat thead th{background:var(--surface);padding:.6rem;text-align:left;font-family:"Montserrat",sans-serif;font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;}
+.heat .oh th{background:var(--gold-wash);padding:.55rem .8rem;text-align:left;}
+.heat .rl{width:5rem;padding:.6rem .8rem;font-family:"Montserrat",sans-serif;font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);}
+.cell{display:flex;flex-direction:column;gap:.25rem;width:100%;min-height:3.6rem;text-align:left;border:0;background:var(--gold-tint);padding:.5rem .6rem;cursor:pointer;margin:0;}
+.cell.gap{background:var(--gap-tint);box-shadow:inset 0 0 0 2px var(--gap);background-image:repeating-linear-gradient(135deg,transparent 0 7px,rgba(164,71,47,.1) 7px 9px);}
+.cell.over{background:var(--over-bg);color:var(--over-fg);}
+.cell.sel{outline:3px solid var(--focus);outline-offset:-3px;}
+.cell .chips{display:flex;gap:.25rem;flex-wrap:wrap;}
+.cell small{font-size:.82rem;line-height:1.2;}
+.cell.gap small{color:var(--gap);font-weight:600;}
+.detail{border:1px solid var(--gold);background:var(--surface);padding:1rem 1.2rem;margin:1rem 0;}
+.flaglist details{background:var(--surface);border:1px solid var(--line);margin-bottom:.6rem;}
+.flaglist summary{cursor:pointer;padding:.7rem 1rem;font-family:"Montserrat",sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;}
+.flaglist ul{margin:0;padding:0 1rem .8rem 2.2rem;font-size:.97rem;}
+.flaglist li{margin:.25rem 0;}
+.linkrow{background:var(--surface);border:1px solid var(--line);padding:.8rem 1rem;margin-bottom:.6rem;}
+.linkrow code{display:block;font-size:.8rem;word-break:break-all;color:var(--ink-soft);margin:.3rem 0 .5rem;font-family:ui-monospace,Menlo,monospace;}
+.center{max-width:460px;margin:3rem auto;text-align:center;}
+.pin{font-family:"Montserrat",sans-serif;font-size:1.6rem;letter-spacing:.6em;text-align:center;width:11rem;background:var(--bg);border:1px solid var(--line);padding:.6rem .4rem .6rem 1rem;border-radius:2px;}
+@media (max-width:760px){
+  .grid2{grid-template-columns:1fr;}
+  .strip{grid-template-columns:1fr 1fr;}
+  .strip div:nth-child(2){border-right:0;}
+  .strip div:nth-child(-n+2){border-bottom:1px solid var(--line);}
+  .ind{grid-template-columns:1fr;}
+  .side{justify-content:flex-start;padding:0 1.1rem .7rem 3.6rem;}
+  .chk{grid-template-columns:1.5rem minmax(0,1fr);}
+  .chk .dim,.chk .txt{grid-column:2;}
+  .notebox{padding-left:1.1rem;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ============ CONFIG ============ */
+// Leave both blank to run in DEMO mode (sample data, nothing saved).
+// To go live, paste your Supabase Project URL and anon/publishable key here.
+const CONFIG={SUPABASE_URL:"https://thayfodkaireqjtsnhhd.supabase.co",SUPABASE_ANON_KEY:"sb_publishable__3Oxqcw9mCsp8mu0Zm9_1g_OsQEDlZU"};
+const DEMO=!CONFIG.SUPABASE_URL;
+
+/* ============ FRAMEWORK DATA ============ */
+const STAGES=[
+  {name:"New Disciple",goal:"Being established in their faith and the family of God",obj:"Observation and Imitation",say:"I do, you watch."},
+  {name:"Growing Disciple",goal:"Growing up in the essentials of the faith with the help of others",obj:"Participation and Formation",say:"You do, I watch."},
+  {name:"Maturing Disciple",goal:"Taking ownership of their faith and being equipped for multiplication",obj:"Ownership and Transformational Practice",say:"You do, I support."},
+  {name:"Multiplying Disciple",goal:"Fully grown and able to invest in others",obj:"Modeling and Multiplication",say:"You help others."}
+];
+const AM_UNITS=[
+  {name:"Welcome and Assimilation",blurb:"How we move a first-time guest toward what’s next. The very first on-ramp, before someone has committed to anything."},
+  {name:"Connecting Point",blurb:"The front door itself: welcome, relational connection, Summit basics, Q&A, and a compelling next step into Membership."},
+  {name:"Baptism",blurb:"Its own process for those who haven’t yet been baptized: how it’s taught, offered, and celebrated, and by whom."},
+  {name:"Next",blurb:"Where a person goes after Connecting Point, before they enter Membership."},
+  {name:"Membership",blurb:"The most robust component. By the end, a person should be assessed, integrated into community, and signed up to serve and give."}
+];
+const DIMS=["Head","Heart","Hand"];
+const OUTCOMES=[
+  {name:"Intimacy with God",def:"A growing knowledge and experience of God’s heart and activity that comes from pursuing Him as our greatest treasure.",
+   t:[["Articulates a simple understanding of who God is","Articulates basic truths about God and His Word","Holds theological clarity of who God is and what He does","Helps others understand who God is and what He does"],
+      ["Expresses a basic desire to know and experience God","Demonstrates a growing desire to know and enjoy God","Expresses a deepening satisfaction in God as their highest treasure","Models a life of abiding in God that others can follow"],
+      ["Begins engaging Scripture and prayer with others","Beginning to engage God’s word and prayer on their own","Engages God regularly through transformative spiritual practices","Equips others to engage Scripture, prayer, and confession"]]},
+  {name:"Fruit of the Spirit",def:"An increasing experience of the Holy Spirit’s presence that demonstrates the character of God and distinguishes His people from an unbelieving world.",
+   t:[["Articulates a basic awareness of the spiritual battle","Shows growing awareness of the spiritual battle","Engages the spiritual battle with confidence in the Spirit","Instructs others in engaging in the spiritual battle"],
+      ["Expresses their desire for the Holy Spirit’s help to change","Demonstrates a growing dependence on the Spirit","Desires to grow in Christlikeness and obedience","Compels others to identify sin and pursue Christlikeness"],
+      ["Begins to identify sin and need for grace with help","Identifies sin and pursues obedience with help from others","Takes responsibility to fight sin and pursue transformation","Models ongoing repentance and dependence on the Spirit"]]},
+  {name:"Grace Story",def:"An increasing awareness of the gospel that transforms our lives and compels us to share God’s grace with others.",
+   t:[["Understands the basic message of the gospel","Understands their place in God’s bigger story","Grasps how the gospel story shapes their identity","Helps others interpret their story in light of the gospel"],
+      ["Basic awareness of their new identity in Christ","Expresses a growing burden for others to know Jesus","Demonstrates confidence in Christ and their identity","Helps others embrace their identity in Christ"],
+      ["Explains the gospel in simple terms","Communicates the gospel with increasing clarity","Models gospel fluency in life and relationships","Models gospel fluency and equips others in it"]]},
+  {name:"Personal Mission",def:"A growing understanding of God’s mission and how He has uniquely gifted each of us to love and serve His church, and the places where we live, work, and play.",
+   t:[["Basic awareness of their place in God’s family","Recognizes everyday life as the context for mission","Understands their unique role in God’s purposes","Helps others know their place in God’s redemptive mission"],
+      ["Receives and responds to care in community","Desires to live as a committed member of church family","Desires to invest in the lives of others with purpose","Encourages deeper commitment to the family of God"],
+      ["Is baptized into and served by the family of God","Discovers and begins using their gifts to serve others","Intentionally serves others in the church and everyday life","Equips others to use their gifts to serve the church and world"]]},
+  {name:"Stewardship of Life",def:"An increasing willingness to faithfully use everything God has entrusted to us to reflect His glory.",
+   t:[["Basic awareness of God as their provider","Understands God’s call to steward all of life","Convinced all they have is entrusted by God","Teaches others to trust God and steward their lives"],
+      ["Observes cheerful stewardship in others","Experiences God as their provider and begins to rely on Him","Joyfully lives with open hands regarding time and resources","Inspires others toward generosity and sacrificial living"],
+      ["Takes simple steps to steward their life","Begins prioritizing life around God’s purposes","Practices consistent generosity and service","Models a life of open-handed stewardship"]]}
+];
+const INDS=[];
+OUTCOMES.forEach((o,oi)=>DIMS.forEach((d,di)=>STAGES.forEach((s,si)=>INDS.push({id:oi+"."+di+"."+si,o:oi,d:di,s:si,text:o.t[di][si]}))));
+const IND=Object.fromEntries(INDS.map(i=>[i.id,i]));
+const TEAM_INFO={
+  gospel:{line:"The Word · Foundation",def:"Forming a disciple who understands, believes, and lives from the gospel as the foundation of their identity and participation in God’s redemptive mission."},
+  knowing:{line:"The Word · Head",def:"Developing a disciple with a growing understanding of God and His word that shapes how they think, discern, and engage the world."},
+  communion:{line:"The Way · Heart",def:"Cultivating a disciple who abides with God through personal relationship and spiritual practices that transform their heart and lives."},
+  community:{line:"The Way · Hand",def:"Equipping a disciple to live out their faith in the context of intentional biblical community through relationships, service, and shared mission."},
+  mission:{line:"The Way · Hand",def:"Mobilizing a disciple to confidently engage in God’s mission by representing the gospel where they live, work, and play."},
+  assim:{line:"The front door",def:"Build Summit’s front door and on-ramp so people are welcomed, known, understand covenant membership, and are intentionally handed into the disciple-making pathway."}
+};
+const SPACES=[["Divine","Personal"],["Intimate","2–5"],["Family","8–20"],["Scattered","20–70"],["Gathered","20+"]];
+const LEADERS=["Self","Multiplying disciple","Group leader","Staff or pastor"];
+const unitsOf=kind=>kind==="assim"?AM_UNITS:STAGES;
+
+/* ============ HELPERS ============ */
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=id=>document.getElementById(id);
+const fmtDate=s=>s?new Date(s).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"—";
+const indLabel=i=>OUTCOMES[i.o].name+" · "+DIMS[i.d]+" · "+STAGES[i.s].name;
+const short=id=>OUTCOMES[IND[id].o].name+" · "+DIMS[IND[id].d];
+const spaceOpts=(sel,none)=>(none?'<option value="">'+none+"</option>":"")+SPACES.map(x=>'<option value="'+x[0]+'"'+(x[0]===sel?" selected":"")+">"+x[0]+" ("+x[1]+")</option>").join("");
+const leaderOpts=(sel,none)=>(none?'<option value="">'+none+"</option>":"")+LEADERS.map(x=>'<option'+(x===sel?" selected":"")+">"+x+"</option>").join("");
+
+/* ============ DATA LAYER ============ */
+function remoteApi(){
+  async function rpc(fn,args){
+    const r=await fetch(CONFIG.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"Content-Type":"application/json",apikey:CONFIG.SUPABASE_ANON_KEY},body:JSON.stringify(args)});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok)throw new Error((j&&j.message)||"Request failed");
+    return j;
+  }
+  return {
+    teamGet:t=>rpc("team_get",{p_token:t}),
+    claimSet:(t,id,on)=>rpc("claim_set",{p_token:t,p_indicator:id,p_on:on}),
+    claimNote:(t,id,note)=>rpc("claim_note",{p_token:t,p_indicator:id,p_note:note}),
+    stepSave:(t,step)=>rpc("step_save",{p_token:t,p_step:step}),
+    stepDelete:(t,id)=>rpc("step_delete",{p_token:t,p_id:id}),
+    adminGet:pin=>rpc("admin_get",{p_pin:pin}),
+    adminRotate:(pin,team)=>rpc("admin_rotate_token",{p_pin:pin,p_team:team})
+  };
+}
+function mockApi(){
+  const day=86400000,ago=n=>new Date(Date.now()-n*day).toISOString();
+  const M={teams:[
+    {id:"gospel",name:"Gospel Story",abbr:"GS",kind:"category",token:"gospel"},
+    {id:"knowing",name:"Knowing God",abbr:"KG",kind:"category",token:"knowing"},
+    {id:"communion",name:"Communion with God",abbr:"CG",kind:"category",token:"communion"},
+    {id:"community",name:"Life in Community",abbr:"LC",kind:"category",token:"community"},
+    {id:"mission",name:"Life on Mission",abbr:"LM",kind:"category",token:"mission"},
+    {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assim"}
+  ],claims:[],steps:[]};
+  const rules={gospel:[[2,"01","0123"],[2,"2","01"]],knowing:[[0,"0","0123"],[1,"0","0123"],[2,"0","23"],[4,"0","12"]],communion:[[0,"12","0123"],[1,"1","0123"],[1,"2","01"]],community:[[3,"01","0123"],[1,"2","123"],[4,"2","23"]],mission:[[2,"2","123"],[3,"2","123"],[3,"0","123"]]};
+  Object.entries(rules).forEach(([t,rs])=>rs.forEach(([o,ds,ss])=>[...ds].forEach(d=>[...ss].forEach(s=>M.claims.push({team_id:t,indicator:o+"."+d+"."+s,note:"",updated_at:ago(3+Math.floor(Math.random()*20))})))));
+  const setNote=(t,id,n)=>{const c=M.claims.find(x=>x.team_id===t&&x.indicator===id);if(c)c.note=n;};
+  setNote("gospel","2.0.0","Gospel conversation guide plus a simple, repeated outline.");
+  setNote("gospel","2.2.0","Practice explaining it in one minute with a leader.");
+  setNote("knowing","0.0.0","Five simple truths about God a new disciple can retell.");
+  let n=0;const uid=()=>"demo-"+(++n)+"-"+Math.random().toString(36).slice(2,7);
+  const S=(team,unit,name,desc,is,il,ss,sl,inds)=>M.steps.push({id:uid(),team_id:team,unit,name,description:desc,ideal_space:is,ideal_leader:il,secondary_space:ss||null,secondary_leader:sl||null,indicators:inds||[],created_at:ago(10-M.steps.length),updated_at:ago(2+M.steps.length)});
+  S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying disciple","Family","Group leader",["2.0.0","2.2.0"]);
+  S("gospel",0,"One-page gospel card","A pocket-size outline anyone can hand to a friend. It lowers the bar for sharing, so a brand-new disciple can start without a script.","Scattered","Self","Intimate","Multiplying disciple",["2.2.0"]);
+  S("gospel",1,"Your story inside God’s story","Guided sessions that place a personal story on the biblical storyline. It’s here so growing disciples see where they fit.","Family","Group leader","Gathered","Staff or pastor",["2.0.1"]);
+  S("knowing",0,"Who is God? Five simple truths","Five short truths a new disciple can retell. It builds the first layer of theological clarity without overwhelming them.","Family","Group leader","Intimate","Multiplying disciple",["0.0.0"]);
+  S("assim",1,"Welcome table and first conversation","A friendly table and one real conversation on a first Sunday. It’s here so no guest leaves without being known by name.","Gathered","Group leader","Scattered","Multiplying disciple");
+  S("assim",4,"Membership class (interim 1.0)","A facilitator-led class covering covenant, serving, and next steps. It’s here to turn interest into a clear commitment.","Gathered","Staff or pastor","Family","Group leader");
+  const wait=v=>new Promise(r=>setTimeout(()=>r(v),90));
+  const team=id=>M.teams.find(t=>t.token===id);
+  const fails=[];
+  return {
+    teamGet:async tk=>{const t=team(tk);if(!t)return wait({error:"bad_token"});
+      const claims={};M.claims.filter(c=>c.team_id===t.id).forEach(c=>claims[c.indicator]={note:c.note});
+      const others={};M.claims.filter(c=>c.team_id!==t.id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(M.teams.find(x=>x.id===c.team_id).abbr);});
+      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},claims,steps:JSON.parse(JSON.stringify(M.steps.filter(s=>s.team_id===t.id))),others});},
+    claimSet:async(tk,id,on)=>{const t=team(tk);if(t.kind!=="category")return wait({error:"not_allowed"});
+      const i=M.claims.findIndex(c=>c.team_id===t.id&&c.indicator===id);
+      if(on&&i<0)M.claims.push({team_id:t.id,indicator:id,note:"",updated_at:new Date().toISOString()});
+      if(!on&&i>=0)M.claims.splice(i,1);return wait({ok:true});},
+    claimNote:async(tk,id,note)=>{setNote(team(tk).id,id,note);return wait({ok:true});},
+    stepSave:async(tk,st)=>{const t=team(tk);const now=new Date().toISOString();
+      if(st.id){const s=M.steps.find(x=>x.id===st.id&&x.team_id===t.id);Object.assign(s,st,{secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,updated_at:now});return wait({ok:true,id:s.id});}
+      const s=Object.assign({},st,{id:uid(),team_id:t.id,secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,created_at:now,updated_at:now});M.steps.push(s);return wait({ok:true,id:s.id});},
+    stepDelete:async(tk,id)=>{M.steps=M.steps.filter(s=>!(s.id===id&&s.team_id===team(tk).id));return wait({ok:true});},
+    adminGet:async pin=>{
+      const recent=fails.filter(t=>Date.now()-t<900000);
+      if(recent.length>=5)return wait({error:"locked"});
+      if(pin!=="1234"){fails.push(Date.now());return wait({error:"wrong_pin"});}
+      return wait(JSON.parse(JSON.stringify({teams:M.teams,claims:M.claims,steps:M.steps})));},
+    adminRotate:async()=>wait({ok:true,token:"demo"})
+  };
+}
+const api=DEMO?mockApi():remoteApi();
+
+/* ============ STATE ============ */
+const S={mode:"landing",token:null,data:null,pin:null,admin:null,tab:"ws",stage:0,adminTab:"overview",adminTeam:"gospel",sel:null,editing:null,confirmDel:null,confirmRot:null,stepsStage:0,msg:"",busy:false,loadErr:"",pinErr:"",focus:null};
+let saveTimer=null,noteTimers={};
+function setSave(state){
+  const el=$("savechip");if(!el)return;
+  el.className=state==="error"?"err":"";
+  el.textContent=state==="saving"?"Saving…":state==="saved"?"Saved ✓":state==="error"?"Not saved":"";
+  clearTimeout(saveTimer);
+  if(state==="saved")saveTimer=setTimeout(()=>{const e=$("savechip");if(e){e.textContent="";}},2200);
+}
+async function track(p){setSave("saving");try{const r=await p;if(r&&r.error)throw new Error(r.error);setSave("saved");return r;}catch(e){setSave("error");throw e;}}
+
+/* ============ BOOT ============ */
+async function boot(){
+  const q=new URLSearchParams(location.search);
+  if(DEMO){await goDemo("gospel","build");return;}
+  if(q.get("t")){await loadTeam(q.get("t"));}
+  else if(q.has("admin")||location.hash==="#admin"){S.mode="pin";render();}
+  else{S.mode="landing";render();}
+}
+async function goDemo(who,tab){
+  S.sel=null;S.editing=null;S.stage=0;S.adminTab="overview";S.pin=null;S.admin=null;
+  if(who==="admin"){S.mode="pin";S.pinErr="";render();return;}
+  S.tab=tab||"ws";
+  await loadTeam(who);
+}
+async function loadTeam(token){
+  S.token=token;S.mode="loading";render();
+  try{
+    const d=await api.teamGet(token);
+    if(d.error){S.mode="bad";render();return;}
+    S.data=d;S.mode="team";if(d.team.kind==="assim")S.tab="build";render();
+  }catch(e){S.mode="bad";S.loadErr=e.message;render();}
+}
+async function loadAdmin(pin){
+  S.busy=true;S.pinErr="";render();
+  try{
+    const d=await api.adminGet(pin);
+    if(d.error){S.pinErr=d.error==="locked"?"Too many wrong tries. Wait 15 minutes and try again.":"That PIN isn’t right.";S.busy=false;S.mode="pin";render();return;}
+    S.pin=pin;S.admin=d;S.mode="admin";S.busy=false;render();
+  }catch(e){S.pinErr="Couldn’t reach the server. Try again.";S.busy=false;S.mode="pin";render();}
+}
+
+/* ============ RENDER ============ */
+function render(){
+  $("app").innerHTML=header()+(DEMO?demoBar():"")+"<main>"+body()+"</main>";
+  if(S.focus){const el=document.querySelector('[data-key="'+S.focus+'"]');if(el)el.focus();S.focus=null;}
+}
+function header(){
+  const who=S.mode==="team"?esc(S.data.team.name):S.mode==="admin"?"Admin":"";
+  return '<header class="bar"><div class="bar-in"><div class="brand"><b>Summit Church</b><span>Disciple-Making Pathway · Build Hub</span></div><div class="bar-r"><span class="who">'+who+'</span><span id="savechip" role="status" aria-live="polite"></span></div></div></header>';
+}
+function demoBar(){
+  const cur=S.mode==="admin"||S.mode==="pin"?"admin":(S.data&&S.data.team.id)||"gospel";
+  const opts=[["gospel","Gospel Story team"],["knowing","Knowing God team"],["communion","Communion with God team"],["community","Life in Community team"],["mission","Life on Mission team"],["assim","Assimilation & Membership team"],["admin","Admin (PIN 1234)"]];
+  return '<div class="demo"><div class="demo-in"><b class="sans" style="font-size:.64rem;letter-spacing:.09em;text-transform:uppercase">Demo</b><span>Sample data, nothing is saved. In the live version each team opens its own private link.</span><label>Viewing as <select id="demoWho" data-a="demoWho">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+o[1]+"</option>").join("")+"</select></label></div></div>";
+}
+function body(){
+  switch(S.mode){
+    case "landing":return '<div class="center"><h1>Build Hub</h1><p class="lbl" style="margin-top:1rem">Open the private link your team lead sent you to get to your team’s workspace.</p></div>';
+    case "loading":return '<div class="center"><p class="lbl">Loading…</p></div>';
+    case "bad":return '<div class="center"><h1>Link not valid</h1><p class="lbl" style="margin-top:1rem">This link doesn’t match a team. Ask Jutty for a fresh one.</p>'+(S.loadErr?'<p class="sub">'+esc(S.loadErr)+"</p>":"")+"</div>";
+    case "pin":return pinView();
+    case "team":return teamView();
+    case "admin":return adminView();
+  }
+  return "";
+}
+function pinView(){
+  return '<div class="center"><h1>Admin</h1><p class="lbl" style="margin:1rem 0">Enter your 4-digit PIN.</p><div class="field" style="align-items:center"><label for="pin" class="sub" style="position:absolute;left:-9999px">PIN</label><input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]*"'+(S.busy?" disabled":"")+'></div>'+(S.pinErr?'<p class="err" role="alert">'+esc(S.pinErr)+"</p>":"")+'<p><button class="btn" data-a="pinGo"'+(S.busy?" disabled":"")+">"+(S.busy?"Checking…":"Open admin")+"</button></p></div>";
+}
+
+/* ---------- Team workspace ---------- */
+function teamView(){
+  const d=S.data,t=d.team,info=TEAM_INFO[t.id];
+  let h="<h1>"+esc(t.name)+'</h1><p class="pull">'+esc(info.def)+"</p>";
+  h+=workspace(d,false);
+  return h;
+}
+function workspace(d,ro){
+  const t=d.team;
+  let h="";
+  if(t.kind==="category"){
+    h+='<div class="mainnav" role="tablist"><button role="tab" data-a="tab" data-v="ws"'+(S.tab==="ws"?' aria-current="page"':"")+'>Worksheet</button><button role="tab" data-a="tab" data-v="build"'+(S.tab==="build"?' aria-current="page"':"")+">Build</button></div>";
+  }else if(S.tab!=="build")S.tab="build";
+  const tab=t.kind==="assim"?"build":S.tab;
+  return h+(tab==="ws"?wsView(d,ro):bView(d,ro));
+}
+function stageTabs(d,counter){
+  const U=unitsOf(d.team.kind);
+  return '<div class="tabs" role="tablist">'+U.map((u,i)=>'<button role="tab" data-a="stage" data-v="'+i+'" data-key="tab'+i+'" aria-selected="'+(S.stage===i)+'"><b>'+esc(u.name)+"</b><span>"+counter(i)+"</span></button>").join("")+"</div>";
+}
+function wsView(d,ro){
+  const st=S.stage,total=Object.keys(d.claims).length;
+  let h="";
+  if(!ro)h+='<p class="note">Claim every descriptor your category will produce, then jot what steps or tools might get a disciple there. If one feels like it belongs to someone else, claim it anyway and keep moving. Jutty will sort overlap.</p>';
+  h+=stageTabs(d,i=>INDS.filter(x=>x.s===i&&d.claims[x.id]).length+" of 15 claimed");
+  const S0=STAGES[st];
+  h+='<div class="stagehead"><h2>'+esc(S0.name)+"</h2><span>"+esc(S0.goal)+'</span><span class="say">'+esc(S0.obj)+": “"+esc(S0.say)+"”</span></div>";
+  OUTCOMES.forEach((o,oi)=>{
+    h+='<section class="oc"><header><h3>'+esc(o.name)+"</h3><p>"+esc(o.def)+"</p></header>";
+    DIMS.forEach((dm,di)=>{
+      const id=oi+"."+di+"."+st,c=d.claims[id],on=!!c,others=d.others[id]||[];
+      h+='<div class="ind'+(on?" on":"")+'"><button class="chk" role="checkbox" aria-checked="'+on+'" data-a="claim" data-id="'+id+'" data-key="c'+id+'"'+(ro?" disabled":"")+'><span class="box">'+(on?"✓":"")+'</span><span class="dim">'+dm+'</span><span class="txt">'+esc(IND[id].text)+"</span></button>"+
+        '<div class="side">'+(others.length?'<span class="sub">Also claimed by</span>'+others.map(a=>'<span class="chip">'+esc(a)+"</span>").join(""):"")+"</div>";
+      if(on){
+        h+='<div class="notebox">'+(ro?(c.note?'<p class="sub" style="margin:0">Potential steps: '+esc(c.note)+"</p>":""):'<label class="sub" for="n'+id+'">Potential steps, tools, or experiences</label><textarea id="n'+id+'" data-note="'+id+'" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--line);padding:.4rem .5rem;border-radius:2px">'+esc(c.note)+"</textarea>")+"</div>";
+      }
+      h+="</div>";
+    });
+    h+="</section>";
+  });
+  if(!ro)h+='<p class="sub">'+total+" of 60 claimed in total.</p>";
+  return h;
+}
+function stepCard(s,d,ro){
+  const sec=s.secondary_space||s.secondary_leader?[s.secondary_space,s.secondary_leader].filter(Boolean).join(" · "):"None";
+  let h='<article class="step"><header><h4>'+esc(s.name)+"</h4>";
+  if(!ro){
+    h+=S.confirmDel===s.id?'<span class="acts"><span class="sub">Remove this step?</span><button class="link" data-a="delYes" data-id="'+s.id+'">Yes</button><button class="link" data-a="delNo">No</button></span>':'<span class="acts"><button class="link" data-a="edit" data-id="'+s.id+'">Edit</button><button class="link" data-a="del" data-id="'+s.id+'">Remove</button></span>';
+  }
+  h+='</header><p class="desc">'+esc(s.description)+'</p><div class="lead"><b>Ideal</b><span>'+esc(s.ideal_space)+" · "+esc(s.ideal_leader)+"</span><b>Secondary</b><span>"+esc(sec)+"</span></div>";
+  if(s.indicators&&s.indicators.length)h+='<div class="meta">'+s.indicators.map(id=>IND[id]?'<span class="chip plain" title="'+esc(indLabel(IND[id]))+'">'+esc(short(id))+"</span>":"").join("")+"</div>";
+  return h+"</article>";
+}
+function stepForm(d,s){
+  const isNew=!s.id,cat=d.team.kind==="category";
+  const claimed=cat?INDS.filter(i=>i.s===S.stage&&d.claims[i.id]):[];
+  return '<div class="formbox" id="stepform"><h3>'+(isNew?"New step":"Edit step")+"</h3>"+
+    '<div class="field"><label for="f-name">Step name</label><input id="f-name" data-key="f-name" type="text" maxlength="120" value="'+esc(s.name||"")+'"></div>'+
+    '<div class="field"><label for="f-desc">What is it, and why is it here?</label><textarea id="f-desc" rows="4">'+esc(s.description||"")+"</textarea></div>"+
+    '<fieldset><legend>Ideal</legend><div class="grid2"><div class="field"><label for="f-is">Space</label><select id="f-is">'+spaceOpts(s.ideal_space||"Family")+'</select></div><div class="field"><label for="f-il">Leader</label><select id="f-il">'+leaderOpts(s.ideal_leader||"Group leader")+"</select></div></div></fieldset>"+
+    '<fieldset><legend>Secondary (if there is one)</legend><div class="grid2"><div class="field"><label for="f-ss">Space</label><select id="f-ss">'+spaceOpts(s.secondary_space||"","None")+'</select></div><div class="field"><label for="f-sl">Leader</label><select id="f-sl">'+leaderOpts(s.secondary_leader||"","None")+"</select></div></div></fieldset>"+
+    (cat?'<details class="opt"'+((s.indicators||[]).length?" open":"")+"><summary>Link to the descriptors it addresses (optional)</summary>"+(claimed.length?'<div class="checks" id="f-inds">'+claimed.map(i=>'<label><input type="checkbox" value="'+i.id+'"'+((s.indicators||[]).includes(i.id)?" checked":"")+"><span>"+esc(short(i.id))+": "+esc(i.text)+"</span></label>").join("")+"</div>":'<p class="sub">Claim descriptors on the Worksheet first and they’ll show up here.</p>')+"</details>":"")+
+    '<div id="f-err" class="err" role="alert"></div><div class="row" style="margin:.4rem 0 0"><button class="btn" data-a="saveStep" data-id="'+esc(s.id||"")+'">Save step</button><button class="btn ghost" data-a="cancelStep">Cancel</button></div></div>';
+}
+function bView(d,ro){
+  const st=S.stage,cat=d.team.kind==="category",U=unitsOf(d.team.kind);
+  let h=stageTabs(d,i=>{const n=d.steps.filter(x=>x.unit===i).length;return n+(n===1?" step":" steps");});
+  if(cat){const S0=STAGES[st];h+='<div class="stagehead"><h2>'+esc(S0.name)+"</h2><span>"+esc(S0.goal)+'</span><span class="say">'+esc(S0.obj)+": “"+esc(S0.say)+"”</span></div>";}
+  else h+='<div class="stagehead"><h2>'+esc(U[st].name)+"</h2><span>"+esc(U[st].blurb)+"</span></div>";
+  if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. Intimate, Family, and Scattered are the key spaces.</p>';
+  if(cat){
+    const claimed=INDS.filter(i=>i.s===st&&d.claims[i.id]);
+    h+='<details class="ref"><summary>Your claimed descriptors at this stage ('+claimed.length+")</summary>"+(claimed.length?"<ul>"+claimed.map(i=>"<li><b>"+esc(short(i.id))+":</b> "+esc(i.text)+(d.claims[i.id].note?'<br><span class="sub">'+esc(d.claims[i.id].note)+"</span>":"")+"</li>").join("")+"</ul>":'<p class="sub" style="padding:0 1rem .8rem">Nothing claimed here yet. Use the Worksheet tab.</p>')+"</details>";
+  }
+  const steps=d.steps.filter(x=>x.unit===st);
+  if(!steps.length&&S.editing!=="new")h+='<div class="empty">No steps for '+esc(U[st].name)+" yet.</div>";
+  steps.forEach(s=>{h+=(S.editing===s.id&&!ro)?stepForm(d,s):stepCard(s,d,ro);});
+  if(!ro){
+    if(S.editing==="new")h+=stepForm(d,{});
+    else if(!S.editing)h+='<p><button class="btn" data-a="newStep">Add a step</button></p>';
+  }
+  return h;
+}
+
+/* ---------- Admin ---------- */
+function adminTeamData(id){
+  const A=S.admin,t=A.teams.find(x=>x.id===id),claims={},others={};
+  A.claims.filter(c=>c.team_id===id).forEach(c=>claims[c.indicator]={note:c.note});
+  A.claims.filter(c=>c.team_id!==id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(A.teams.find(x=>x.id===c.team_id).abbr);});
+  return {team:t,claims,others,steps:A.steps.filter(s=>s.team_id===id)};
+}
+function adminView(){
+  const tabs=[["overview","Overview"],["teams","Teams"],["steps","All steps"],["links","Links and export"]];
+  let h="<h1>Admin</h1>"+'<div class="mainnav" role="tablist">'+tabs.map(([k,l])=>'<button role="tab" data-a="atab" data-v="'+k+'"'+(S.adminTab===k?' aria-current="page"':"")+">"+l+"</button>").join("")+'<span style="flex:1"></span><button data-a="refresh">Refresh</button></div><div style="margin-top:1.2rem">';
+  if(S.adminTab==="overview")h+=overview();
+  else if(S.adminTab==="teams")h+=teamsTab();
+  else if(S.adminTab==="steps")h+=allSteps();
+  else h+=linksTab();
+  return h+"</div>";
+}
+const cats=()=>S.admin.teams.filter(t=>t.kind==="category");
+const claimersOf=id=>cats().filter(t=>S.admin.claims.some(c=>c.team_id===t.id&&c.indicator===id));
+function overview(){
+  const A=S.admin;
+  const gap=INDS.filter(i=>!claimersOf(i.id).length),over=INDS.filter(i=>claimersOf(i.id).length>1);
+  let h='<div class="strip"><div><b>'+(60-gap.length)+'<small class="sans" style="font-size:.9rem;font-weight:500"> of 60</small></b><span>indicators claimed</span></div><div><b>'+gap.length+"</b><span>unclaimed</span></div><div><b>"+over.length+"</b><span>claimed by two or more</span></div><div><b>"+A.steps.length+"</b><span>steps written</span></div></div>";
+  h+='<h3 style="margin-bottom:.6rem">Team progress</h3><div class="scroll"><table class="tbl"><thead><tr><th>Team</th><th>Claimed</th><th>Steps by stage</th><th>Last edit</th></tr></thead><tbody>'+A.teams.map(t=>{
+    const U=unitsOf(t.kind),counts=U.map((_,i)=>A.steps.filter(s=>s.team_id===t.id&&s.unit===i).length);
+    const cl=A.claims.filter(c=>c.team_id===t.id).length;
+    const times=[...A.claims.filter(c=>c.team_id===t.id).map(c=>c.updated_at),...A.steps.filter(s=>s.team_id===t.id).map(s=>s.updated_at)].sort();
+    return "<tr><td><b>"+esc(t.name)+"</b></td><td>"+(t.kind==="category"?cl+" of 60":'<span class="sub">n/a</span>')+"</td><td>"+U.map((u,i)=>'<span class="sub">'+esc(t.kind==="assim"?u.name.split(" ")[0]:STAGES[i].name.split(" ")[0])+"</span> <b>"+counts[i]+"</b>").join(" &nbsp;·&nbsp; ")+"</td><td>"+fmtDate(times[times.length-1])+"</td></tr>";
+  }).join("")+"</tbody></table></div>";
+  h+='<h3 style="margin:1.8rem 0 .4rem">Coverage map</h3><div class="legend"><span><i class="sw gap"></i>Unclaimed</span><span><i class="sw one"></i>One team</span><span><i class="sw over"></i>Two or more teams</span></div>';
+  h+='<div class="scroll"><table class="heat"><thead><tr><th></th>'+STAGES.map(s=>"<th>"+esc(s.name)+"</th>").join("")+"</tr></thead><tbody>";
+  OUTCOMES.forEach((o,oi)=>{
+    h+='<tr class="oh"><th colspan="5">'+esc(o.name)+"</th></tr>";
+    DIMS.forEach((dm,di)=>{
+      h+='<tr><th class="rl" scope="row">'+dm+"</th>";
+      STAGES.forEach((_,si)=>{
+        const id=oi+"."+di+"."+si,c=claimersOf(id),cls=c.length===0?"gap":c.length>1?"over":"";
+        const label=indLabel(IND[id])+": "+(c.length?"claimed by "+c.map(t=>t.name).join(", "):"unclaimed");
+        h+='<td><button class="cell '+cls+(S.sel===id?" sel":"")+'" data-a="sel" data-id="'+id+'" data-key="h'+id+'" aria-label="'+esc(label)+'">'+(c.length?'<span class="chips">'+c.map(t=>'<span class="chip">'+esc(t.abbr)+"</span>").join("")+"</span>":"<small>Unclaimed</small>")+"</button></td>";
+      });
+      h+="</tr>";
+    });
+  });
+  h+="</tbody></table></div>";
+  if(S.sel){
+    const i=IND[S.sel],c=claimersOf(i.id);
+    h+='<div class="detail"><h3>'+esc(indLabel(i))+'</h3><p style="font-size:1.15rem;margin:.2rem 0 .6rem">“'+esc(i.text)+"”</p>";
+    if(!c.length)h+='<p style="color:var(--gap)">No team has claimed this yet.</p>';
+    c.forEach(t=>{
+      const note=(A.claims.find(x=>x.team_id===t.id&&x.indicator===i.id)||{}).note;
+      const linked=A.steps.filter(s=>s.team_id===t.id&&(s.indicators||[]).includes(i.id));
+      h+="<p><b>"+esc(t.name)+"</b>"+(note?'<br><span class="sub">Potential steps: '+esc(note)+"</span>":"")+(linked.length?'<br><span class="sub">Linked steps: '+linked.map(s=>esc(s.name)).join("; ")+"</span>":"")+"</p>";
+    });
+    if(c.length>1)h+='<p class="note">Overlap. Decide whether this is shared on purpose or needs one owner.</p>';
+    h+="</div>";
+  }
+  h+='<div class="flaglist" style="margin-top:1.4rem"><details open><summary>Unclaimed ('+gap.length+")</summary><ul>"+gap.map(i=>"<li>"+esc(indLabel(i))+" — "+esc(i.text)+"</li>").join("")+"</ul></details><details><summary>Overlap ("+over.length+")</summary><ul>"+over.map(i=>"<li>"+esc(indLabel(i))+" — "+claimersOf(i.id).map(t=>esc(t.abbr)).join(", ")+"</li>").join("")+"</ul></details></div>";
+  return h;
+}
+function teamsTab(){
+  const A=S.admin;
+  let h='<div class="tabs" role="tablist">'+A.teams.map(t=>'<button role="tab" data-a="ateam" data-v="'+t.id+'" aria-selected="'+(t.id===S.adminTeam)+'"><b>'+esc(t.name)+"</b><span>"+(t.kind==="category"?A.claims.filter(c=>c.team_id===t.id).length+" claimed · ":"")+A.steps.filter(s=>s.team_id===t.id).length+" steps</span></button>").join("")+"</div>";
+  const d=adminTeamData(S.adminTeam);
+  if(d.team.kind==="assim"){S.tab="build";}
+  h+=workspace(d,true);
+  return h;
+}
+function allSteps(){
+  const A=S.admin;
+  const opts=STAGES.map((s,i)=>[String(i),s.name]).concat([["am","Assimilation & Membership"]]);
+  const cur=S.stepsStage;
+  let h='<div class="tabs" role="tablist">'+opts.map(([k,l])=>'<button role="tab" data-a="sstage" data-v="'+k+'" aria-selected="'+(String(cur)===k)+'"><b>'+esc(l)+"</b><span>"+(k==="am"?A.steps.filter(s=>s.team_id==="assim").length:A.steps.filter(s=>s.team_id!=="assim"&&s.unit===+k).length)+" steps</span></button>").join("")+"</div>";
+  const list=cur==="am"?A.steps.filter(s=>s.team_id==="assim"):A.steps.filter(s=>s.team_id!=="assim"&&s.unit===+cur);
+  if(list.length){
+    const by=sp=>list.filter(s=>s.ideal_space===sp).length;
+    const staff=list.filter(s=>s.ideal_leader==="Staff or pastor").length;
+    h+='<div class="panel"><h3>Where these steps ideally happen</h3><div class="meta" style="margin:0">'+SPACES.map(x=>'<span class="chip">'+x[0]+" "+by(x[0])+"</span>").join("")+'<span class="chip plain">Staff or pastor-led '+staff+" of "+list.length+"</span></div></div>";
+  }else h+='<div class="empty">No steps here yet.</div>';
+  const groups=A.teams.filter(t=>list.some(s=>s.team_id===t.id));
+  groups.forEach(t=>{
+    h+='<h3 style="margin:1.2rem 0 .6rem">'+esc(t.name)+"</h3>";
+    const U=unitsOf(t.kind);
+    list.filter(s=>s.team_id===t.id).forEach(s=>{h+=(cur==="am"?'<p class="sub" style="margin:.2rem 0">'+esc(U[s.unit].name)+"</p>":"")+stepCard(s,null,true);});
+  });
+  return h;
+}
+function linksTab(){
+  const A=S.admin;
+  const base=DEMO?"https://your-site.example/":location.origin+location.pathname;
+  let h='<p class="note">Send each team lead their private link. No login needed. Anyone with the link can edit that team’s work, so share it only with the team. “New link” stops the old one from working.</p>';
+  A.teams.forEach(t=>{
+    const url=base+"?t="+(DEMO?"…":t.token);
+    h+='<div class="linkrow"><b class="sans" style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">'+esc(t.name)+"</b><code>"+esc(url)+'</code><div class="row" style="margin:0"><button class="btn small" data-a="copyLink" data-v="'+esc(t.token)+'"'+(DEMO?" disabled":"")+">Copy link</button>"+(S.confirmRot===t.id?'<span class="sub">Replace this link?</span><button class="link" data-a="rotYes" data-id="'+t.id+'">Yes</button><button class="link" data-a="rotNo">No</button>':'<button class="btn small ghost" data-a="rot" data-id="'+t.id+'"'+(DEMO?" disabled":"")+">New link</button>")+"</div></div>";
+  });
+  h+='<h3 style="margin:1.8rem 0 .6rem">Export for analysis</h3><div class="row"><button class="btn" data-a="exportJson">Download everything (JSON)</button><button class="btn ghost" data-a="exportCsv">Download steps (CSV)</button><button class="btn ghost" data-a="copyJson">Copy JSON</button></div>'+(S.msg?'<p class="sub" role="status">'+esc(S.msg)+"</p>":"");
+  return h;
+}
+
+/* ============ ACTIONS ============ */
+function download(name,text,type){
+  const b=new Blob([text],{type});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function exportData(){
+  const A=S.admin;
+  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind})),claims:A.claims,steps:A.steps};
+}
+function exportCsv(){
+  const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Addresses"]];
+  A.steps.forEach(s=>{const t=A.teams.find(x=>x.id===s.team_id);const U=unitsOf(t.kind);rows.push([t.name,U[s.unit].name,s.name,s.description,s.ideal_space,s.ideal_leader,s.secondary_space||"",s.secondary_leader||"",(s.indicators||[]).map(short).join("; ")]);});
+  return rows.map(r=>r.map(csvCell).join(",")).join("\n");
+}
+async function refreshAdmin(){
+  setSave("saving");
+  try{const d=await api.adminGet(S.pin);if(d.error)throw new Error(d.error);S.admin=d;setSave("saved");render();}catch(e){setSave("error");}
+}
+function flushNotes(){
+  Object.keys(noteTimers).forEach(id=>{clearTimeout(noteTimers[id]);delete noteTimers[id];const el=document.querySelector('[data-note="'+id+'"]');if(el)saveNote(id,el.value);});
+}
+function saveNote(id,val){
+  if(S.data&&S.data.claims[id])S.data.claims[id].note=val;
+  track(api.claimNote(S.token,id,val)).catch(()=>{});
+}
+document.addEventListener("input",e=>{
+  const id=e.target.dataset&&e.target.dataset.note;if(!id)return;
+  clearTimeout(noteTimers[id]);
+  noteTimers[id]=setTimeout(()=>{delete noteTimers[id];saveNote(id,e.target.value);},700);
+});
+document.addEventListener("focusout",e=>{
+  const id=e.target.dataset&&e.target.dataset.note;if(!id)return;
+  if(noteTimers[id]){clearTimeout(noteTimers[id]);delete noteTimers[id];saveNote(id,e.target.value);}
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.id==="pin"&&e.key==="Enter"){const v=e.target.value;if(/^\d{4}$/.test(v))loadAdmin(v);}
+});
+document.addEventListener("change",e=>{
+  if(e.target.id==="demoWho")goDemo(e.target.value,"build");
+});
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-a]");if(!el||el.tagName==="SELECT")return;
+  const a=el.dataset.a,id=el.dataset.id,v=el.dataset.v;
+  if(el.dataset.key)S.focus=el.dataset.key;
+  if(a==="pinGo"){const val=$("pin").value;if(!/^\d{4}$/.test(val)){S.pinErr="Enter exactly 4 digits.";render();return;}await loadAdmin(val);return;}
+  if(a==="tab"){flushNotes();S.tab=v;S.editing=null;S.confirmDel=null;}
+  else if(a==="stage"){flushNotes();S.stage=+v;S.editing=null;S.confirmDel=null;}
+  else if(a==="claim"){
+    const d=S.data,on=!d.claims[id];
+    if(on)d.claims[id]={note:""};else delete d.claims[id];
+    render();
+    try{await track(api.claimSet(S.token,id,on));}catch(err){if(on)delete d.claims[id];else d.claims[id]={note:""};render();}
+    return;
+  }
+  else if(a==="newStep"){S.editing="new";S.confirmDel=null;S.focus="f-name";}
+  else if(a==="edit"){S.editing=id;S.confirmDel=null;}
+  else if(a==="cancelStep"){S.editing=null;}
+  else if(a==="del"){S.confirmDel=id;}
+  else if(a==="delNo"){S.confirmDel=null;}
+  else if(a==="delYes"){
+    const d=S.data;S.confirmDel=null;
+    try{await track(api.stepDelete(S.token,id));d.steps=d.steps.filter(s=>s.id!==id);}catch(err){}
+  }
+  else if(a==="saveStep"){
+    const d=S.data,name=$("f-name").value.trim(),desc=$("f-desc").value.trim();
+    if(!name){$("f-err").textContent="Give the step a name.";$("f-name").focus();return;}
+    if(!desc){$("f-err").textContent="Say what it is and why it’s here.";$("f-desc").focus();return;}
+    const step={unit:S.stage,name,description:desc,ideal_space:$("f-is").value,ideal_leader:$("f-il").value,secondary_space:$("f-ss").value,secondary_leader:$("f-sl").value,indicators:[...document.querySelectorAll("#f-inds input:checked")].map(x=>x.value)};
+    if(id)step.id=id;
+    el.disabled=true;
+    try{
+      const r=await track(api.stepSave(S.token,step));
+      const saved=Object.assign({},step,{id:r.id,secondary_space:step.secondary_space||null,secondary_leader:step.secondary_leader||null,updated_at:new Date().toISOString()});
+      const i=d.steps.findIndex(s=>s.id===r.id);
+      if(i>=0)d.steps[i]=Object.assign(d.steps[i],saved);else d.steps.push(saved);
+      S.editing=null;
+    }catch(err){el.disabled=false;$("f-err").textContent="Couldn’t save. Check your connection and try again.";return;}
+  }
+  else if(a==="atab"){S.adminTab=v;S.sel=null;S.msg="";S.tab="ws";S.stage=0;}
+  else if(a==="ateam"){S.adminTeam=v;S.tab="ws";S.stage=0;}
+  else if(a==="sstage"){S.stepsStage=v==="am"?"am":+v;}
+  else if(a==="sel"){S.sel=S.sel===id?null:id;}
+  else if(a==="refresh"){await refreshAdmin();return;}
+  else if(a==="rot"){S.confirmRot=id;}
+  else if(a==="rotNo"){S.confirmRot=null;}
+  else if(a==="rotYes"){
+    S.confirmRot=null;
+    try{const r=await track(api.adminRotate(S.pin,id));if(r.token){S.admin.teams.find(t=>t.id===id).token=r.token;}}catch(err){}
+  }
+  else if(a==="copyLink"){try{await navigator.clipboard.writeText(location.origin+location.pathname+"?t="+v);S.msg="Link copied.";}catch(err){S.msg="Couldn’t copy. Select the link and copy it by hand.";}}
+  else if(a==="exportJson"){try{download("pathway-build-export.json",JSON.stringify(exportData(),null,2),"application/json");S.msg="";}catch(err){S.msg="Download isn’t available here. Use Copy JSON.";}}
+  else if(a==="exportCsv"){try{download("pathway-steps.csv",exportCsv(),"text/csv");S.msg="";}catch(err){S.msg="Download isn’t available here.";}}
+  else if(a==="copyJson"){try{await navigator.clipboard.writeText(JSON.stringify(exportData(),null,2));S.msg="Copied. Paste it into chat for analysis.";}catch(err){S.msg="Couldn’t copy here.";}}
+  render();
+});
+boot();
+</script>
+</body>
+</html>
