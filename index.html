@@ -274,6 +274,25 @@ a.btn{display:inline-block;text-decoration:none;}
 .mainnav::-webkit-scrollbar{display:none;}
 .mainnav button{white-space:nowrap;}
 @media (max-width:600px){.mainnav button{padding:.7rem .6rem;font-size:.62rem;letter-spacing:.07em;}}
+
+/* ---- must-check callout ---- */
+.mustcheck{background:var(--gold-deep);color:var(--on-deep);padding:1.1rem 1.3rem 1.2rem;margin:.6rem 0 1.2rem;border-left:8px solid var(--ink);box-shadow:0 1px 0 var(--line);}
+.mustcheck .mclabel{display:block;font-family:"Montserrat",sans-serif;font-weight:700;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.4rem;opacity:.95;}
+.mustcheck p{margin:0;font-size:1.22rem;line-height:1.45;}
+.mustcheck b{font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;}
+@media (max-width:600px){.mustcheck p{font-size:1.1rem;}}
+
+/* ---- complete-state colors (green when all addressed, red when not) ---- */
+:root{--ok:#2F6B45;--ok-tint:#E3EFE6;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ok:#8FCB9F;--ok-tint:#233A2B;}}
+:root[data-theme="dark"]{--ok:#8FCB9F;--ok-tint:#233A2B;}
+.done-panel.good{background:var(--ok-tint);border-color:var(--ok);border-left:6px solid var(--ok);}
+.done-panel.good p,.done-panel.good b{color:var(--ok);}
+.done-panel.bad{background:var(--gap-tint);border-color:var(--gap);border-left:6px solid var(--gap);}
+.done-panel.bad p,.done-panel.bad b{color:var(--gap);}
+.done-panel .miss{flex:1 1 100%;font-size:.95rem;}
+.done-panel.good .btn.ghost{border-color:var(--ok);color:var(--ok);}
+.done-panel.bad .btn.ghost{border-color:var(--gap);color:var(--gap);}
 </style>
 </head>
 <body>
@@ -335,7 +354,7 @@ const TEAM_INFO={
   assim:{line:"The front door",def:"Build Summit’s front door and on-ramp so people are welcomed, known, understand covenant membership, and are intentionally handed into the disciple-making pathway."}
 };
 const SPACES=[["Divine","Personal"],["Intimate","2–5"],["Family","8–20"],["Scattered","20–70"],["Gathered","20+"]];
-const LEADERS=["Self","Multiplying disciple","Group leader","Staff or pastor"];
+const LEADERS=["Self (the disciple)","Multiplying Disciple (Spiritual Parent)","Trained Leader","Elder/Staff"];
 const unitsOf=kind=>kind==="assim"?AM_UNITS:STAGES;
 
 const TOOL_KINDS=["Existing at Summit","Existing from outside","Needs to be created"];
@@ -389,12 +408,12 @@ function mockApi(){
   setNote("knowing","0.0.0","Five simple truths about God a new disciple can retell.");
   let n=0;const uid=()=>"demo-"+(++n)+"-"+Math.random().toString(36).slice(2,7);
   const S=(team,unit,name,desc,is,il,ss,sl,inds,tool,tk,pr)=>M.steps.push({id:uid(),team_id:team,unit,name,description:desc,ideal_space:is,ideal_leader:il,secondary_space:ss||null,secondary_leader:sl||null,indicators:inds||[],tool:tool||"",tool_kind:tk||null,principles:pr||[],created_at:ago(10-M.steps.length),updated_at:ago(1+M.steps.length)});
-  S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying disciple","Family","Group leader",["2.0.0","2.2.0"],"We need a short guide a lay leader can use to walk a new believer through three conversations: hearing the gospel, retelling it, and practicing it with a friend.","Needs to be created",["Relational","Transferable","Gospel-Centered","Holistic"]);
-  S("gospel",0,"One-page gospel card","A pocket-size outline anyone can hand to a friend. It lowers the bar for sharing, so a brand-new disciple can start without a script.","Scattered","Self","Intimate","Multiplying disciple",["2.2.0"],"A pocket-size printed card with the gospel in four lines.","Needs to be created",["Transferable","Gospel-Centered"]);
-  S("gospel",1,"Your story inside God’s story","Guided sessions that place a personal story on the biblical storyline. It’s here so growing disciples see where they fit.","Family","Group leader","Gathered","Staff or pastor",["2.0.1"],"","",["Convictional","Holistic"]);
-  S("knowing",0,"Who is God? Five simple truths","Five short truths a new disciple can retell. It builds the first layer of theological clarity without overwhelming them.","Family","Group leader","Intimate","Multiplying disciple",["0.0.0"],"Knowing God by J.I. Packer, chapters 1–5, with a one-page discussion guide.","Existing from outside",["Convictional","Holistic"]);
-  S("assim",1,"Welcome table and first conversation","A friendly table and one real conversation on a first Sunday. It’s here so no guest leaves without being known by name.","Gathered","Group leader","Scattered","Multiplying disciple");
-  S("assim",4,"Membership class (interim 1.0)","A facilitator-led class covering covenant, serving, and next steps. It’s here to turn interest into a clear commitment.","Gathered","Staff or pastor","Family","Group leader",[],"The current Membership handout, trimmed for the interim class.","Existing at Summit",["Convictional","Measurable"]);
+  S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying Disciple (Spiritual Parent)","Family","Trained Leader",["2.0.0","2.2.0"],"We need a short guide a lay leader can use to walk a new believer through three conversations: hearing the gospel, retelling it, and practicing it with a friend.","Needs to be created",["Relational","Transferable","Gospel-Centered","Holistic"]);
+  S("gospel",0,"One-page gospel card","A pocket-size outline anyone can hand to a friend. It lowers the bar for sharing, so a brand-new disciple can start without a script.","Scattered","Self (the disciple)","Intimate","Multiplying Disciple (Spiritual Parent)",["2.2.0"],"A pocket-size printed card with the gospel in four lines.","Needs to be created",["Transferable","Gospel-Centered"]);
+  S("gospel",1,"Your story inside God’s story","Guided sessions that place a personal story on the biblical storyline. It’s here so growing disciples see where they fit.","Family","Trained Leader","Gathered","Elder/Staff",["2.0.1"],"","",["Convictional","Holistic"]);
+  S("knowing",0,"Who is God? Five simple truths","Five short truths a new disciple can retell. It builds the first layer of theological clarity without overwhelming them.","Family","Trained Leader","Intimate","Multiplying Disciple (Spiritual Parent)",["0.0.0"],"Knowing God by J.I. Packer, chapters 1–5, with a one-page discussion guide.","Existing from outside",["Convictional","Holistic"]);
+  S("assim",1,"Welcome table and first conversation","A friendly table and one real conversation on a first Sunday. It’s here so no guest leaves without being known by name.","Gathered","Trained Leader","Scattered","Multiplying Disciple (Spiritual Parent)");
+  S("assim",4,"Membership class (interim 1.0)","A facilitator-led class covering covenant, serving, and next steps. It’s here to turn interest into a clear commitment.","Gathered","Elder/Staff","Family","Trained Leader",[],"The current Membership handout, trimmed for the interim class.","Existing at Summit",["Convictional","Measurable"]);
   const prog=()=>M.teams.map(t=>{
     const U=t.kind==="assim"?5:4,cl=M.claims.filter(c=>c.team_id===t.id),outcomes={};
     cl.forEach(c=>{const o=c.indicator.split(".")[0];outcomes[o]=(outcomes[o]||0)+1;});
@@ -604,7 +623,7 @@ function stepForm(d,s){
     '<div class="field"><label for="f-desc">What is it, and why is it here?</label><textarea id="f-desc" rows="4">'+esc(s.description||"")+"</textarea></div>"+
     (cat?'<fieldset><legend>Which outcomes does this step address?</legend>'+(claimed.length?'<p class="sub" style="margin:.2rem 0 .5rem">Pick every one this step helps produce. The same outcome can be addressed by more than one step.</p><div class="checks" id="f-inds" style="max-height:18rem">'+claimed.map(i=>'<label><input type="checkbox" value="'+i.id+'"'+(selI.includes(i.id)?" checked":"")+"><span><b>"+esc(short(i.id))+":</b> "+esc(i.text)+"</span></label>").join("")+"</div>":'<p class="sub">Claim outcomes on the Worksheet first and they’ll show up here.</p>')+"</fieldset>":"")+
     '<fieldset><legend>Which principles does this step address?</legend><div class="checks" id="f-prs" style="max-height:none">'+PRINCIPLES.map(p=>'<label><input type="checkbox" value="'+p[0]+'"'+(selP.includes(p[0])?" checked":"")+"><span><b>"+p[0]+'</b> <span class="sub">'+p[1]+"</span></span></label>").join("")+"</div></fieldset>"+
-    '<fieldset><legend>Ideal</legend><div class="grid2"><div class="field"><label for="f-is">Space</label><select id="f-is">'+spaceOpts(s.ideal_space||"Family")+'</select></div><div class="field"><label for="f-il">Leader</label><select id="f-il">'+leaderOpts(s.ideal_leader||"Group leader")+"</select></div></div></fieldset>"+
+    '<fieldset><legend>Ideal</legend><div class="grid2"><div class="field"><label for="f-is">Space</label><select id="f-is">'+spaceOpts(s.ideal_space||"Family")+'</select></div><div class="field"><label for="f-il">Leader</label><select id="f-il">'+leaderOpts(s.ideal_leader||"Trained Leader")+"</select></div></div></fieldset>"+
     '<fieldset><legend>Secondary (if there is one)</legend><div class="grid2"><div class="field"><label for="f-ss">Space</label><select id="f-ss">'+spaceOpts(s.secondary_space||"","None")+'</select></div><div class="field"><label for="f-sl">Leader</label><select id="f-sl">'+leaderOpts(s.secondary_leader||"","None")+"</select></div></div></fieldset>"+
     '<fieldset><legend>The tool this step needs</legend><div class="field"><label for="f-tk">Where it comes from</label><select id="f-tk">'+toolOpts(s.tool_kind||"")+'</select></div><div class="field"><label for="f-tool">Describe the type of tool and other information that will help us understand what is needed.</label><textarea id="f-tool" rows="6" maxlength="2000" placeholder="Example: We need to build a tool that helps a spiritual parent train the people they are leading to find their voice through confession and prayer.">'+esc(s.tool||"")+"</textarea></div></fieldset>"+
     '<div id="f-err" class="err" role="alert"></div><div class="row" style="margin:.4rem 0 0"><button class="btn" data-a="saveStep" data-id="'+esc(s.id||"")+'">Save step</button><button class="btn ghost" data-a="cancelStep">Cancel</button></div></div>';
@@ -660,10 +679,20 @@ function checkPanel(d,steps,cat,st,U){
   items.push([steps.length>0&&spaceOk,steps.length?pct+"% of ideal spaces are Intimate, Family, or Scattered."+(spaceOk?"":(cat&&st===0?" New disciples need to be highly relational.":" Look for steps a person or small group could carry.")):"No steps yet."]);
   items.push([steps.length>0&&wt===steps.length,wt+" of "+steps.length+" steps describe a tool. Tools can be named afterward."]);
   const checked=!!S.checked[st];
-  return '<section class="checkpanel"><h3>Check your work</h3><p>Before you mark this stage complete, check your work using the checklists above. Here’s where things stand:</p><ul class="cwlist">'+
+  return '<section class="checkpanel"><h3>Check your work</h3><p>Here’s where things stand:</p><ul class="cwlist">'+
     items.map(([ok,t])=>'<li class="'+(ok?"ok":"no")+'"><span aria-hidden="true">'+(ok?"✓":"○")+"</span><span>"+esc(t)+"</span></li>").join("")+"</ul>"+
     '<label class="cb"><input type="checkbox" data-a="toggleCheck" data-v="'+st+'" data-key="chk'+st+'"'+(checked?" checked":"")+"><span>I’ve checked my work using the checklists.</span></label>"+
     '<div class="row" style="margin:.6rem 0 0"><button class="btn" data-a="setFlag" data-v="unit'+st+'"'+(checked?"":" disabled")+">Mark complete</button>"+(checked?"":'<span class="sub">Check the box above to unlock this.</span>')+"</div></section>";
+}
+function donePanel(d,steps,cat,st,U){
+  const claimed=cat?INDS.filter(i=>i.s===st&&d.claims[i.id]):[];
+  const miss=claimed.filter(i=>!steps.some(x=>(x.indicators||[]).includes(i.id)));
+  const btn='<button class="btn ghost" data-a="setFlag" data-v="unit'+st+'">Reopen</button>';
+  if(miss.length){
+    return '<div class="done-panel bad" role="status"><p><b>'+esc(U[st].name)+"</b> is marked complete, but <b>there is a claimed outcome that isn’t addressed yet</b> ("+miss.length+" of "+claimed.length+").</p>"+btn+
+      '<p class="miss">Not addressed yet: '+miss.map(i=>esc(short(i.id))).join("; ")+".</p></div>";
+  }
+  return '<div class="done-panel good" role="status"><p><b>'+esc(U[st].name)+"</b> is marked complete."+(claimed.length?" Every claimed outcome is addressed.":" You can reopen it anytime.")+"</p>"+btn+"</div>";
 }
 function bView(d,ro){
   const st=S.stage,cat=d.team.kind==="category",U=unitsOf(d.team.kind);
@@ -678,11 +707,12 @@ function bView(d,ro){
     if(S.editing==="new")h+=stepForm(d,{});
     else if(!S.editing)h+='<p><button class="btn" data-a="newStep">Add a step</button></p>';
   }
-  h+='<h2 class="secthead">Checklists</h2><p class="sub" style="margin:0 0 .9rem">These show what your saved steps cover, and they update each time a step is saved.</p>';
+  h+='<h2 class="secthead">Checklists</h2>';
+  if(!ro)h+='<aside class="mustcheck" role="note"><p>Before you mark this stage as complete, please check that this stage is <b>covering every claimed outcome</b>, is <b>balanced (when possible) in the principles</b>, and is <b>utilizing the ideal spaces for this particular stage</b>.</p></aside>';
   h+=coverGrid(d,steps,cat)+spaceViz(steps,cat,cat?st:-1);
   if(!ro){
     const done=(d.flags.units_done||[]).includes(st);
-    if(done)h+='<div class="done-panel ok"><p><b>'+esc(U[st].name)+"</b> is marked complete. You can reopen it anytime.</p>"+'<button class="btn ghost" data-a="setFlag" data-v="unit'+st+'">Reopen</button></div>';
+    if(done)h+=donePanel(d,steps,cat,st,U);
     else h+=checkPanel(d,steps,cat,st,U);
   }
   return h;
@@ -754,10 +784,10 @@ function allSteps(){
   let h='<div class="tabs" role="tablist">'+opts.map(([k,l])=>'<button role="tab" data-a="sstage" data-v="'+k+'" aria-selected="'+(String(cur)===k)+'"><b>'+esc(l)+"</b><span>"+(k==="am"?A.steps.filter(s=>s.team_id==="assim").length:A.steps.filter(s=>s.team_id!=="assim"&&s.unit===+k).length)+" steps</span></button>").join("")+"</div>";
   const list=cur==="am"?A.steps.filter(s=>s.team_id==="assim"):A.steps.filter(s=>s.team_id!=="assim"&&s.unit===+cur);
   if(list.length){
-    const staff=list.filter(x=>x.ideal_leader==="Staff or pastor").length;
+    const staff=list.filter(x=>x.ideal_leader==="Elder/Staff").length;
     const tools=list.filter(x=>x.tool&&x.tool.trim()).length;
     h+=spaceViz(list,cur!=="am",cur==="am"?-1:+cur);
-    h+='<p class="sub">Staff or pastor-led ideals: '+staff+" of "+list.length+" · Tools named: "+tools+" of "+list.length+"</p>";
+    h+='<p class="sub">Elder/Staff-led ideals: '+staff+" of "+list.length+" · Tools named: "+tools+" of "+list.length+"</p>";
   }else h+='<div class="empty">No steps here yet.</div>';
   A.teams.filter(t=>list.some(s=>s.team_id===t.id)).forEach(t=>{
     const mine=list.filter(x=>x.team_id===t.id);
