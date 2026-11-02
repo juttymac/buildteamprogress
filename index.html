@@ -292,6 +292,13 @@ a.btn{display:inline-block;text-decoration:none;}
 .done-panel .miss{flex:1 1 100%;font-size:.95rem;}
 .done-panel.good .btn.ghost{border-color:var(--ok);color:var(--ok);}
 .done-panel.bad .btn.ghost{border-color:var(--gap);color:var(--gap);}
+/* ---- required column + per-stage worksheet ---- */
+.ind{grid-template-columns:minmax(0,1fr) auto 7.4rem;}
+.reqcol{justify-self:end;padding-right:1rem;}
+.reqbtn{font-family:"Montserrat",sans-serif;font-weight:600;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;background:transparent;color:var(--ink-soft);border:1px solid var(--ink-soft);padding:.4rem .6rem;border-radius:2px;cursor:pointer;white-space:nowrap;}
+.reqbtn.on{background:var(--gold-deep);color:var(--on-deep);border-color:var(--gold-deep);}
+.reqmark{font-weight:700;}
+@media (max-width:760px){.ind{grid-template-columns:1fr;}.reqcol{justify-self:start;padding:0 1.1rem .7rem 3.6rem;}}
 </style>
 </head>
 <body>
@@ -381,6 +388,7 @@ function remoteApi(){
     teamGet:t=>rpc("team_get",{p_token:t}),
     claimSet:(t,id,on)=>rpc("claim_set",{p_token:t,p_indicator:id,p_on:on}),
     claimNote:(t,id,note)=>rpc("claim_note",{p_token:t,p_indicator:id,p_note:note}),
+    claimRequired:(t,id,on)=>rpc("claim_required",{p_token:t,p_indicator:id,p_required:on}),
     stepSave:(t,step)=>rpc("step_save",{p_token:t,p_step:step}),
     stepDelete:(t,id)=>rpc("step_delete",{p_token:t,p_id:id}),
     flagSet:(t,key,done)=>rpc("flag_set",{p_token:t,p_key:key,p_done:done}),
@@ -391,12 +399,12 @@ function remoteApi(){
 function mockApi(){
   const day=86400000,ago=n=>new Date(Date.now()-n*day).toISOString();
   const M={teams:[
-    {id:"gospel",name:"Gospel Story",abbr:"GS",kind:"category",token:"gospel-story",claim_done:true,units_done:[0]},
-    {id:"knowing",name:"Knowing God",abbr:"KG",kind:"category",token:"knowing-god",claim_done:true,units_done:[]},
-    {id:"communion",name:"Communion with God",abbr:"CG",kind:"category",token:"communion-with-god",claim_done:false,units_done:[]},
-    {id:"community",name:"Life in Community",abbr:"LC",kind:"category",token:"life-in-community",claim_done:false,units_done:[]},
-    {id:"mission",name:"Life on Mission",abbr:"LM",kind:"category",token:"life-on-mission",claim_done:false,units_done:[]},
-    {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assimilation-and-membership",claim_done:false,units_done:[]}
+    {id:"gospel",name:"Gospel Story",abbr:"GS",kind:"category",token:"gospel-story",claim_units_done:[0,1,2,3],units_done:[0]},
+    {id:"knowing",name:"Knowing God",abbr:"KG",kind:"category",token:"knowing-god",claim_units_done:[0,1,2,3],units_done:[]},
+    {id:"communion",name:"Communion with God",abbr:"CG",kind:"category",token:"communion-with-god",claim_units_done:[0,1],units_done:[]},
+    {id:"community",name:"Life in Community",abbr:"LC",kind:"category",token:"life-in-community",claim_units_done:[0],units_done:[]},
+    {id:"mission",name:"Life on Mission",abbr:"LM",kind:"category",token:"life-on-mission",claim_units_done:[],units_done:[]},
+    {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assimilation-and-membership",claim_units_done:[],units_done:[]}
   ],claims:[],steps:[]};
   M.teams.forEach((t,i)=>t.updated_at=ago(2+i));
   const rules={gospel:[[2,"01","0123"],[2,"2","01"]],knowing:[[0,"0","0123"],[1,"0","0123"],[2,"0","23"],[4,"0","12"]],communion:[[0,"12","0123"],[1,"1","0123"],[1,"2","01"]],community:[[3,"01","0123"],[1,"2","123"],[4,"2","23"]],mission:[[2,"2","123"],[3,"2","123"],[3,"0","123"]]};
@@ -405,6 +413,8 @@ function mockApi(){
   setNote("gospel","2.0.0","Gospel conversation guide plus a simple, repeated outline.");
   setNote("gospel","2.2.0","Practice explaining it in one minute with a leader.");
   setNote("knowing","0.0.0","Five simple truths about God a new disciple can retell.");
+  const setReq=(t,id)=>{const c=M.claims.find(x=>x.team_id===t&&x.indicator===id);if(c)c.required=true;};
+  ["2.0.0","2.1.0","2.2.0"].forEach(id=>setReq("gospel",id));setReq("knowing","0.0.0");setReq("knowing","1.0.0");setReq("community","3.1.0");setReq("communion","0.2.0");
   let n=0;const uid=()=>"demo-"+(++n)+"-"+Math.random().toString(36).slice(2,7);
   const S=(team,unit,name,desc,is,il,ss,sl,inds,tool,tk,pr)=>M.steps.push({id:uid(),team_id:team,unit,name,description:desc,ideal_space:is,ideal_leader:il,secondary_space:ss||null,secondary_leader:sl||null,indicators:inds||[],tool:tool||"",tool_kind:tk||null,principles:pr||[],created_at:ago(10-M.steps.length),updated_at:ago(1+M.steps.length)});
   S("gospel",0,"Gospel in three conversations","Three short conversations where a new disciple hears the gospel, retells it, and practices it. It’s here because a new believer needs to hear the gospel again and say it in their own words before anything else is built on it.","Intimate","Multiplying Disciple (Spiritual Parent)","Family","Trained Leader",["2.0.0","2.2.0"],"We need a short guide a lay leader can use to walk a new believer through three conversations: hearing the gospel, retelling it, and practicing it with a friend.","Needs to be created",["Relational","Transferable","Gospel-Centered","Holistic"]);
@@ -418,28 +428,30 @@ function mockApi(){
     cl.forEach(c=>{const o=c.indicator.split(".")[0];outcomes[o]=(outcomes[o]||0)+1;});
     const st=M.steps.filter(s=>s.team_id===t.id);
     const times=[...cl.map(c=>c.updated_at),...st.map(s=>s.updated_at),t.updated_at].filter(Boolean).sort();
-    return {id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,units_done:t.units_done.slice(),claimed:cl.length,outcomes,
+    return {id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_units_done.length===4,claim_units_done:t.claim_units_done.slice(),units_done:t.units_done.slice(),claimed:cl.length,outcomes,
       steps:Array.from({length:U},(_,u)=>st.filter(s=>s.unit===u).length),steps_total:st.length,tools_done:st.filter(s=>s.tool&&s.tool.trim()).length,last_edit:times[times.length-1]};
   });
   const wait=v=>new Promise(r=>setTimeout(()=>r(JSON.parse(JSON.stringify(v))),90));
   const team=tk=>M.teams.find(t=>t.token===tk);
   return {
     teamGet:async tk=>{const t=team(tk);if(!t)return wait({error:"bad_token"});
-      const claims={};M.claims.filter(c=>c.team_id===t.id).forEach(c=>claims[c.indicator]={note:c.note});
+      const claims={};M.claims.filter(c=>c.team_id===t.id).forEach(c=>claims[c.indicator]={note:c.note,required:!!c.required});
       const others={};M.claims.filter(c=>c.team_id!==t.id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(M.teams.find(x=>x.id===c.team_id).abbr);});
-      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},flags:{claim_done:t.claim_done,units_done:t.units_done},claims,steps:M.steps.filter(s=>s.team_id===t.id),others,progress:prog()});},
+      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},flags:{claim_done:t.claim_units_done.length===4,claim_units_done:t.claim_units_done,units_done:t.units_done},claims,steps:M.steps.filter(s=>s.team_id===t.id),others,progress:prog()});},
     claimSet:async(tk,id,on)=>{const t=team(tk);if(t.kind!=="category")return wait({error:"not_allowed"});
       const i=M.claims.findIndex(c=>c.team_id===t.id&&c.indicator===id);
       if(on&&i<0)M.claims.push({team_id:t.id,indicator:id,note:"",updated_at:new Date().toISOString()});
       if(!on&&i>=0)M.claims.splice(i,1);return wait({ok:true});},
     claimNote:async(tk,id,note)=>{setNote(team(tk).id,id,note);return wait({ok:true});},
+    claimRequired:async(tk,id,on)=>{const c=M.claims.find(x=>x.team_id===team(tk).id&&x.indicator===id);if(!c)return wait({error:"not_claimed"});c.required=!!on;return wait({ok:true});},
     stepSave:async(tk,st)=>{const t=team(tk),now=new Date().toISOString();
       const clean={secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,tool_kind:st.tool_kind||null,tool:(st.tool||"").trim(),principles:st.principles||[]};
       if(st.id){const s=M.steps.find(x=>x.id===st.id&&x.team_id===t.id);Object.assign(s,st,clean,{updated_at:now});return wait({ok:true,id:s.id});}
       const s=Object.assign({},st,clean,{id:uid(),team_id:t.id,created_at:now,updated_at:now});M.steps.push(s);return wait({ok:true,id:s.id});},
     stepDelete:async(tk,id)=>{M.steps=M.steps.filter(s=>!(s.id===id&&s.team_id===team(tk).id));return wait({ok:true});},
     flagSet:async(tk,key,done)=>{const t=team(tk);t.updated_at=new Date().toISOString();
-      if(key==="claim")t.claim_done=!!done;
+      if(key==="claim")t.claim_units_done=done?[0,1,2,3]:[];
+      else if(/^claim[0-3]$/.test(key)){const n=+key.slice(5);t.claim_units_done=t.claim_units_done.filter(x=>x!==n);if(done)t.claim_units_done.push(n);t.claim_units_done.sort();}
       else{const n=+key.slice(4);t.units_done=t.units_done.filter(x=>x!==n);if(done)t.units_done.push(n);t.units_done.sort();}
       return wait({ok:true});},
     adminGet:async k=>{if(k!=="admin-demo")return wait({error:"bad_key"});return wait({teams:M.teams,claims:M.claims,steps:M.steps,progress:prog()});},
@@ -528,12 +540,14 @@ function body(){
 }
 
 /* ---------- Progress panel (everyone) ---------- */
+const claimUnits=f=>(f&&f.claim_units_done)||((f&&f.claim_done)?[0,1,2,3]:[]);
 function phases(p){
   const cat=p.kind==="category",n=cat?4:5;
   const build=(p.units_done||[]).filter(u=>u<n).length;
+  const cu=claimUnits(p).filter(u=>u<4).length;
   const tools=p.steps_total?p.tools_done/p.steps_total:0;
-  const list=cat?[p.claim_done?1:0,build/n,tools]:[build/n,tools];
-  return {build,n,pct:Math.round(list.reduce((a,b)=>a+b,0)/list.length*100)};
+  const list=cat?[cu/4,build/n,tools]:[build/n,tools];
+  return {build,n,cu,pct:Math.round(list.reduce((a,b)=>a+b,0)/list.length*100)};
 }
 function progressInner(){
   const list=S.progress||[];
@@ -541,7 +555,7 @@ function progressInner(){
   let h='<div class="prows">';
   list.forEach(p=>{
     const ph=phases(p),cat=p.kind==="category";
-    const meta=(cat?"Worksheet "+(p.claim_done?"done":"in progress")+" · Stages "+ph.build+" of "+ph.n:"Components "+ph.build+" of "+ph.n)+" · Tools named "+p.tools_done+" of "+p.steps_total+" steps";
+    const meta=(cat?"Worksheet "+ph.cu+" of 4 stages · Build "+ph.build+" of 4 stages":"Components "+ph.build+" of "+ph.n)+" · Tools named "+p.tools_done+" of "+p.steps_total+" steps";
     let work;
     if(cat){
       const o=Object.entries(p.outcomes||{}).sort((a,b)=>b[1]-a[1]);
@@ -555,7 +569,7 @@ function progressInner(){
   return h+"</div>";
 }
 const progressPanel=()=>'<details class="prog" open><summary>Where every team is</summary><div id="progbody">'+progressInner()+"</div></details>";
-const progressTab=()=>'<p class="note">Everyone can see this page. The bar blends three things: worksheet complete, stages complete, and steps with a tool named.</p><div class="prog-box"><div id="progbody">'+progressInner()+"</div></div>";
+const progressTab=()=>'<p class="note">Everyone can see this page. The bar blends three things: worksheet stages complete, build stages complete, and steps with a tool named. Each stage you finish moves it forward.</p><div class="prog-box"><div id="progbody">'+progressInner()+"</div></div>";
 
 /* ---------- Team workspace ---------- */
 function teamView(){
@@ -586,7 +600,7 @@ function wsView(d,ro){
   const st=S.stage,total=Object.keys(d.claims).length;
   let h="";
   if(!ro)h+='<p class="note">Claim every Discipleship Outcome your category will produce, then jot what steps or tools might get a disciple there. If one feels like it belongs to someone else, claim it anyway and keep moving. Jutty will sort overlap.</p>';
-  h+=stageTabs(d,i=>INDS.filter(x=>x.s===i&&d.claims[x.id]).length+" of 15 claimed");
+  h+=stageTabs(d,i=>INDS.filter(x=>x.s===i&&d.claims[x.id]).length+" of 15 claimed"+(claimUnits(d.flags).includes(i)?" · done":""));
   const S0=STAGES[st];
   h+='<div class="stagehead"><h2>'+esc(S0.name)+"</h2><span>"+esc(S0.goal)+'</span><span class="say">'+esc(S0.obj)+": “"+esc(S0.say)+"”</span></div>";
   OUTCOMES.forEach((o,oi)=>{
@@ -594,17 +608,18 @@ function wsView(d,ro){
     DIMS.forEach((dm,di)=>{
       const id=oi+"."+di+"."+st,c=d.claims[id],on=!!c,others=d.others[id]||[];
       h+='<div class="ind'+(on?" on":"")+'"><button class="chk" role="checkbox" aria-checked="'+on+'" data-a="claim" data-id="'+id+'" data-key="c'+id+'"'+(ro?" disabled":"")+'><span class="box">'+(on?"✓":"")+'</span><span class="dim">'+dm+'</span><span class="txt">'+esc(IND[id].text)+"</span></button>"+
-        '<div class="side">'+(others.length?'<span class="sub">Also claimed by</span>'+others.map(a=>'<span class="chip">'+esc(a)+"</span>").join(""):"")+"</div>";
+        '<div class="side">'+(others.length?'<span class="sub">Also claimed by</span>'+others.map(a=>'<span class="chip">'+esc(a)+"</span>").join(""):"")+"</div>"+
+        '<div class="reqcol">'+(on?(ro?(c.required?'<span class="badge ok">Required</span>':""):'<button class="reqbtn'+(c.required?" on":"")+'" role="checkbox" aria-checked="'+(!!c.required)+'" data-a="setRequired" data-id="'+id+'" data-key="r'+id+'" title="Required for every member in the membership process">'+(c.required?"✓ ":"")+"Required</button>"):"")+"</div>";
       if(on){
-        h+='<div class="notebox">'+(ro?(c.note?'<p class="sub" style="margin:0">Potential steps: '+esc(c.note)+"</p>":""):'<label class="sub" for="n'+id+'">Potential steps, tools, or experiences</label><textarea id="n'+id+'" data-note="'+id+'" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--line);padding:.4rem .5rem;border-radius:2px">'+esc(c.note)+"</textarea>")+"</div>";
+        h+='<div class="notebox">'+(ro?(c.note?'<p class="sub" style="margin:0">Notes: '+esc(c.note)+"</p>":""):'<label class="sub" for="n'+id+'">Notes for reference (potential steps, questions, or overall thoughts)</label><textarea id="n'+id+'" data-note="'+id+'" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--line);padding:.4rem .5rem;border-radius:2px">'+esc(c.note)+"</textarea>")+"</div>";
       }
       h+="</div>";
     });
     h+="</section>";
   });
   if(!ro){
-    const done=d.flags.claim_done;
-    h+='<div class="done-panel'+(done?" ok":"")+'"><p><b>'+total+' of 60 claimed.</b> '+(done?"Your worksheet is marked complete. You can reopen it anytime.":"When your team has claimed everything it will produce, mark the worksheet complete.")+'</p><button class="btn'+(done?" ghost":"")+'" data-a="setFlag" data-v="claim">'+(done?"Reopen worksheet":"Mark worksheet complete")+"</button></div>";
+    const nSt=INDS.filter(x=>x.s===st&&d.claims[x.id]).length,done=claimUnits(d.flags).includes(st);
+    h+='<div class="done-panel'+(done?" ok":"")+'"><p><b>'+nSt+" of 15 claimed</b> at "+esc(S0.name)+". "+(done?"This stage’s worksheet is marked complete. You can reopen it anytime.":"When your team has claimed everything it will produce at this stage, mark this stage’s worksheet complete.")+'</p><button class="btn'+(done?" ghost":"")+'" data-a="setFlag" data-v="claim'+st+'">'+(done?"Reopen ":"Mark ")+esc(S0.name)+" worksheet"+(done?"":" complete")+"</button></div>";
   }
   return h;
 }
@@ -727,16 +742,17 @@ function bView(d,ro){
 /* ---------- Admin ---------- */
 function adminTeamData(id){
   const A=S.admin,t=A.teams.find(x=>x.id===id),claims={},others={};
-  A.claims.filter(c=>c.team_id===id).forEach(c=>claims[c.indicator]={note:c.note});
+  A.claims.filter(c=>c.team_id===id).forEach(c=>claims[c.indicator]={note:c.note,required:!!c.required});
   A.claims.filter(c=>c.team_id!==id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(A.teams.find(x=>x.id===c.team_id).abbr);});
-  return {team:t,flags:{claim_done:t.claim_done,units_done:t.units_done||[]},claims,others,steps:A.steps.filter(s=>s.team_id===id)};
+  return {team:t,flags:{claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done||[]},claims,others,steps:A.steps.filter(s=>s.team_id===id)};
 }
 function adminView(){
-  const tabs=[["overview","Overview"],["teams","Teams"],["steps","All steps"],["links","Links and export"],["pathway","Pathway Overview"]];
+  const tabs=[["overview","Overview"],["teams","Teams"],["steps","All steps"],["required","Required"],["links","Links and export"],["pathway","Pathway Overview"]];
   let h="<h1>Admin</h1>"+'<div class="mainnav" role="tablist">'+tabs.map(([k,l])=>'<button role="tab" data-a="atab" data-v="'+k+'"'+(S.adminTab===k?' aria-current="page"':"")+">"+l+"</button>").join("")+'<span style="flex:1"></span><button data-a="refresh">Refresh</button></div><div style="margin-top:1.2rem">';
   if(S.adminTab==="overview")h+=overview();
   else if(S.adminTab==="teams")h+=teamsTab();
   else if(S.adminTab==="steps")h+=allSteps();
+  else if(S.adminTab==="required")h+=requiredView();
   else if(S.adminTab==="pathway")h+=pathwayTab();
   else h+=linksTab();
   return h+"</div>";
@@ -748,7 +764,7 @@ function overview(){
   const gap=INDS.filter(i=>!claimersOf(i.id).length),over=INDS.filter(i=>claimersOf(i.id).length>1);
   let h=progressPanel();
   h+='<div class="strip"><div><b>'+(60-gap.length)+'<small class="sans" style="font-size:.9rem;font-weight:500"> of 60</small></b><span>outcomes claimed</span></div><div><b>'+gap.length+"</b><span>unclaimed</span></div><div><b>"+over.length+"</b><span>claimed by two or more</span></div><div><b>"+A.steps.length+"</b><span>steps written</span></div></div>";
-  h+='<h3 style="margin:1.8rem 0 .4rem">Coverage map</h3><div class="legend"><span><i class="sw gap"></i>Unclaimed</span><span><i class="sw one"></i>One team</span><span><i class="sw over"></i>Two or more teams</span></div>';
+  h+='<h3 style="margin:1.8rem 0 .4rem">Coverage map</h3><div class="legend"><span><i class="sw gap"></i>Unclaimed</span><span><i class="sw one"></i>One team</span><span><i class="sw over"></i>Two or more teams</span><span><b class="sans" style="font-size:.8rem">★</b> Marked required for every member</span></div>';
   h+='<div class="scroll"><table class="heat"><thead><tr><th></th>'+STAGES.map(s=>"<th>"+esc(s.name)+"</th>").join("")+"</tr></thead><tbody>";
   OUTCOMES.forEach((o,oi)=>{
     h+='<tr class="oh"><th colspan="5">'+esc(o.name)+"</th></tr>";
@@ -757,7 +773,7 @@ function overview(){
       STAGES.forEach((_,si)=>{
         const id=oi+"."+di+"."+si,c=claimersOf(id),cls=c.length===0?"gap":c.length>1?"over":"";
         const label=indLabel(IND[id])+": "+(c.length?"claimed by "+c.map(t=>t.name).join(", "):"unclaimed");
-        h+='<td><button class="cell '+cls+(S.sel===id?" sel":"")+'" data-a="sel" data-id="'+id+'" data-key="h'+id+'" aria-label="'+esc(label)+'">'+(c.length?'<span class="chips">'+c.map(t=>'<span class="chip">'+esc(t.abbr)+"</span>").join("")+"</span>":"<small>Unclaimed</small>")+"</button></td>";
+        h+='<td><button class="cell '+cls+(S.sel===id?" sel":"")+'" data-a="sel" data-id="'+id+'" data-key="h'+id+'" aria-label="'+esc(label)+'">'+(c.length?'<span class="chips">'+c.map(t=>'<span class="chip">'+esc(t.abbr)+"</span>").join("")+"</span>"+(A.claims.some(x=>x.indicator===id&&x.required)?'<small class="reqmark">★ Required</small>':""):"<small>Unclaimed</small>")+"</button></td>";
       });
       h+="</tr>";
     });
@@ -770,13 +786,45 @@ function overview(){
     c.forEach(t=>{
       const note=(A.claims.find(x=>x.team_id===t.id&&x.indicator===i.id)||{}).note;
       const linked=A.steps.filter(s=>s.team_id===t.id&&(s.indicators||[]).includes(i.id));
-      h+="<p><b>"+esc(t.name)+"</b>"+(note?'<br><span class="sub">Potential steps: '+esc(note)+"</span>":"")+(linked.length?'<br><span class="sub">Linked steps: '+linked.map(s=>esc(s.name)).join("; ")+"</span>":"")+"</p>";
+      h+="<p><b>"+esc(t.name)+"</b>"+(note?'<br><span class="sub">Notes: '+esc(note)+"</span>":"")+(linked.length?'<br><span class="sub">Linked steps: '+linked.map(s=>esc(s.name)).join("; ")+"</span>":"")+"</p>";
     });
     if(c.length>1)h+='<p class="note">Overlap. Decide whether this is shared on purpose or needs one owner.</p>';
     h+="</div>";
   }
   h+='<div class="flaglist" style="margin-top:1.4rem"><details open><summary>Unclaimed ('+gap.length+")</summary><ul>"+gap.map(i=>"<li>"+esc(indLabel(i))+" — "+esc(i.text)+"</li>").join("")+"</ul></details><details><summary>Overlap ("+over.length+")</summary><ul>"+over.map(i=>"<li>"+esc(indLabel(i))+" — "+claimersOf(i.id).map(t=>esc(t.abbr)).join(", ")+"</li>").join("")+"</ul></details></div>";
   return h;
+}
+function requiredList(){
+  const A=S.admin;
+  const ids=[...new Set(A.claims.filter(c=>c.required).map(c=>c.indicator))].sort((a,b)=>{const x=IND[a],y=IND[b];return x.s-y.s||x.o-y.o||x.d-y.d;});
+  return ids.map(id=>{
+    const flagged=A.claims.filter(c=>c.indicator===id&&c.required).map(c=>A.teams.find(t=>t.id===c.team_id));
+    const notes=flagged.map(t=>({team:t,note:((A.claims.find(c=>c.team_id===t.id&&c.indicator===id)||{}).note||"").trim()})).filter(x=>x.note);
+    const steps=A.steps.filter(x=>flagged.some(t=>t.id===x.team_id)&&(x.indicators||[]).includes(id));
+    return {id,ind:IND[id],flagged,notes,steps};
+  });
+}
+function requiredView(){
+  const list=requiredList();
+  let h='<p class="note">Outcomes teams marked <b>required for every member</b>. This is the starting list for what the membership process needs to carry for all people.</p>';
+  h+='<div class="strip">'+STAGES.map((s,i)=>"<div><b>"+list.filter(x=>x.ind.s===i).length+"</b><span>"+esc(s.name)+"</span></div>").join("")+"</div>";
+  h+='<div class="row" style="justify-content:space-between;margin-top:0"><b class="sans" style="font-size:.8rem;letter-spacing:.06em;text-transform:uppercase">'+list.length+" outcome"+(list.length===1?"":"s")+" marked required</b>"+(list.length?'<button class="btn small ghost" data-a="exportReq">Download CSV</button>':"")+"</div>";
+  if(!list.length)return h+'<div class="empty">No team has marked an outcome as required yet.</div>';
+  STAGES.forEach((S0,si)=>{
+    const here=list.filter(x=>x.ind.s===si);
+    if(!here.length)return;
+    h+='<h3 style="margin:1.4rem 0 .6rem">'+esc(S0.name)+" · "+here.length+"</h3>";
+    here.forEach(x=>{
+      h+='<article class="step"><header><h4>'+esc(short(x.id))+'</h4><span class="meta" style="margin:0">'+x.flagged.map(t=>'<span class="chip" title="'+esc(t.name)+'">'+esc(t.abbr)+"</span>").join("")+"</span></header><p class=\"desc\">"+esc(x.ind.text)+"</p>"+
+        '<div class="lead">'+(x.notes.length?"<b>Notes</b><span>"+x.notes.map(n=>esc(n.team.abbr)+": "+esc(n.note)).join("\n")+"</span>":"")+"<b>Steps</b><span>"+(x.steps.length?x.steps.map(st=>esc(st.name)).join("; "):'<span class="need">No step addressing it yet</span>')+"</span></div></article>";
+    });
+  });
+  return h;
+}
+function exportReqCsv(){
+  const rows=[["Stage","Outcome","Statement","Flagged by","Notes for reference","Steps addressing it"]];
+  requiredList().forEach(x=>rows.push([STAGES[x.ind.s].name,OUTCOMES[x.ind.o].name+" · "+DIMS[x.ind.d],x.ind.text,x.flagged.map(t=>t.name).join("; "),x.notes.map(n=>n.team.abbr+": "+n.note).join(" | "),x.steps.map(st=>st.name).join("; ")]));
+  return rows.map(r=>r.map(csvCell).join(",")).join("\n");
 }
 function teamsTab(){
   const A=S.admin;
@@ -822,7 +870,7 @@ function download(name,text,type){
 function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportData(){
   const A=S.admin;
-  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,units_done:t.units_done})),claims:A.claims,steps:A.steps,progress:A.progress};
+  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done})),claims:A.claims,steps:A.steps,progress:A.progress};
 }
 function exportCsv(){
   const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Tool","Tool source","Addresses","Principles"]];
@@ -865,9 +913,15 @@ document.addEventListener("click",async e=>{
     try{await track(api.claimSet(S.token,id,on));}catch(err){if(on)delete d.claims[id];else d.claims[id]={note:""};render();}
     return;
   }
+  else if(a==="setRequired"){
+    const d=S.data,c=d.claims[id];if(!c)return;
+    const was=!!c.required;c.required=!was;render();
+    try{await track(api.claimRequired(S.token,id,!was));}catch(err){c.required=was;render();}
+    return;
+  }
   else if(a==="setFlag"){
     const f=S.data.flags;let was,apply;
-    if(v==="claim"){was=f.claim_done;apply=x=>{f.claim_done=x;};}
+    if(/^claim[0-3]$/.test(v)){const n=+v.slice(5);was=claimUnits(f).includes(n);apply=x=>{f.claim_units_done=claimUnits(f).filter(u=>u!==n);if(x)f.claim_units_done.push(n);};}
     else{const n=+v.slice(4);was=(f.units_done||[]).includes(n);if(!was&&!S.checked[n])return;apply=x=>{f.units_done=(f.units_done||[]).filter(u=>u!==n);if(x)f.units_done.push(n);if(x)delete S.checked[n];};}
     apply(!was);render();
     try{await track(api.flagSet(S.token,v,!was));}catch(err){apply(was);render();}
@@ -912,6 +966,7 @@ document.addEventListener("click",async e=>{
   }
   else if(a==="copyLink"){try{await navigator.clipboard.writeText(location.origin+"/"+v);S.msg="Link copied.";}catch(err){S.msg="Couldn’t copy. Select the link and copy it by hand.";}}
   else if(a==="exportJson"){try{download("pathway-build-export.json",JSON.stringify(exportData(),null,2),"application/json");S.msg="";}catch(err){S.msg="Download isn’t available here. Use Copy JSON.";}}
+  else if(a==="exportReq"){try{download("required-outcomes.csv",exportReqCsv(),"text/csv");S.msg="";}catch(err){S.msg="Download isn’t available here.";}}
   else if(a==="exportCsv"){try{download("pathway-steps.csv",exportCsv(),"text/csv");S.msg="";}catch(err){S.msg="Download isn’t available here.";}}
   else if(a==="copyJson"){try{await navigator.clipboard.writeText(JSON.stringify(exportData(),null,2));S.msg="Copied. Paste it into chat for analysis.";}catch(err){S.msg="Couldn’t copy here.";}}
   render();
