@@ -299,6 +299,12 @@ a.btn{display:inline-block;text-decoration:none;}
 .reqbtn.on{background:var(--gold-deep);color:var(--on-deep);border-color:var(--gold-deep);}
 .reqmark{font-weight:700;}
 @media (max-width:760px){.ind{grid-template-columns:1fr;}.reqcol{justify-self:start;padding:0 1.1rem .7rem 3.6rem;}}
+.field .pw{width:16rem;max-width:100%;background:var(--bg);border:1px solid var(--line);padding:.7rem .9rem;border-radius:2px;font-size:1.05rem;text-align:center;}
+.descbox{background:var(--surface);border:1px solid var(--gold);border-left:4px solid var(--gold-deep);padding:1rem 1.2rem 1.1rem;margin:0 0 .6rem;}
+.descbox h3{margin-bottom:.4rem;}
+.descbox label{display:block;margin:0 0 .5rem;color:var(--ink-soft);}
+.descbox textarea{display:block;width:100%;min-height:5.2rem;resize:vertical;background:var(--bg);border:1px solid var(--line);padding:.6rem .7rem;border-radius:2px;}
+.descline{margin:.2rem 0 .7rem;}
 </style>
 </head>
 <body>
@@ -389,6 +395,7 @@ function remoteApi(){
     claimSet:(t,id,on)=>rpc("claim_set",{p_token:t,p_indicator:id,p_on:on}),
     claimNote:(t,id,note)=>rpc("claim_note",{p_token:t,p_indicator:id,p_note:note}),
     claimRequired:(t,id,on)=>rpc("claim_required",{p_token:t,p_indicator:id,p_required:on}),
+    descriptorSet:(t,u,text)=>rpc("descriptor_set",{p_token:t,p_unit:u,p_text:text}),
     stepSave:(t,step)=>rpc("step_save",{p_token:t,p_step:step}),
     stepDelete:(t,id)=>rpc("step_delete",{p_token:t,p_id:id}),
     flagSet:(t,key,done)=>rpc("flag_set",{p_token:t,p_key:key,p_done:done}),
@@ -407,6 +414,7 @@ function mockApi(){
     {id:"assim",name:"Assimilation & Membership",abbr:"AM",kind:"assim",token:"assimilation-and-membership",claim_units_done:[],units_done:[]}
   ],claims:[],steps:[]};
   M.teams.forEach((t,i)=>t.updated_at=ago(2+i));
+  M.teams[0].descriptors={0:"A new disciple hears the gospel again and again until they can say it in their own words.",1:"A growing disciple sees where their own story fits inside God’s bigger story."};
   const rules={gospel:[[2,"01","0123"],[2,"2","01"]],knowing:[[0,"0","0123"],[1,"0","0123"],[2,"0","23"],[4,"0","12"]],communion:[[0,"12","0123"],[1,"1","0123"],[1,"2","01"]],community:[[3,"01","0123"],[1,"2","123"],[4,"2","23"]],mission:[[2,"2","123"],[3,"2","123"],[3,"0","123"]]};
   Object.entries(rules).forEach(([t,rs])=>rs.forEach(([o,ds,ss])=>[...ds].forEach(d=>[...ss].forEach(s=>M.claims.push({team_id:t,indicator:o+"."+d+"."+s,note:"",updated_at:ago(3+Math.floor(Math.random()*20))})))));
   const setNote=(t,id,n)=>{const c=M.claims.find(x=>x.team_id===t&&x.indicator===id);if(c)c.note=n;};
@@ -437,12 +445,13 @@ function mockApi(){
     teamGet:async tk=>{const t=team(tk);if(!t)return wait({error:"bad_token"});
       const claims={};M.claims.filter(c=>c.team_id===t.id).forEach(c=>claims[c.indicator]={note:c.note,required:!!c.required});
       const others={};M.claims.filter(c=>c.team_id!==t.id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(M.teams.find(x=>x.id===c.team_id).abbr);});
-      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},flags:{claim_done:t.claim_units_done.length===4,claim_units_done:t.claim_units_done,units_done:t.units_done},claims,steps:M.steps.filter(s=>s.team_id===t.id),others,progress:prog()});},
+      return wait({team:{id:t.id,name:t.name,abbr:t.abbr,kind:t.kind},flags:{claim_done:t.claim_units_done.length===4,claim_units_done:t.claim_units_done,units_done:t.units_done},claims,steps:M.steps.filter(s=>s.team_id===t.id),others,descriptors:t.descriptors||{},progress:prog()});},
     claimSet:async(tk,id,on)=>{const t=team(tk);if(t.kind!=="category")return wait({error:"not_allowed"});
       const i=M.claims.findIndex(c=>c.team_id===t.id&&c.indicator===id);
       if(on&&i<0)M.claims.push({team_id:t.id,indicator:id,note:"",updated_at:new Date().toISOString()});
       if(!on&&i>=0)M.claims.splice(i,1);return wait({ok:true});},
     claimNote:async(tk,id,note)=>{setNote(team(tk).id,id,note);return wait({ok:true});},
+    descriptorSet:async(tk,u,text)=>{const t=team(tk);if(t.kind!=="category")return wait({error:"not_allowed"});t.descriptors=t.descriptors||{};t.descriptors[u]=String(text||"").slice(0,2000);return wait({ok:true});},
     claimRequired:async(tk,id,on)=>{const c=M.claims.find(x=>x.team_id===team(tk).id&&x.indicator===id);if(!c)return wait({error:"not_claimed"});c.required=!!on;return wait({ok:true});},
     stepSave:async(tk,st)=>{const t=team(tk),now=new Date().toISOString();
       const clean={secondary_space:st.secondary_space||null,secondary_leader:st.secondary_leader||null,tool_kind:st.tool_kind||null,tool:(st.tool||"").trim(),principles:st.principles||[]};
@@ -454,14 +463,14 @@ function mockApi(){
       else if(/^claim[0-3]$/.test(key)){const n=+key.slice(5);t.claim_units_done=t.claim_units_done.filter(x=>x!==n);if(done)t.claim_units_done.push(n);t.claim_units_done.sort();}
       else{const n=+key.slice(4);t.units_done=t.units_done.filter(x=>x!==n);if(done)t.units_done.push(n);t.units_done.sort();}
       return wait({ok:true});},
-    adminGet:async k=>{if(k!=="admin-demo")return wait({error:"bad_key"});return wait({teams:M.teams,claims:M.claims,steps:M.steps,progress:prog()});},
+    adminGet:async k=>{if(k!=="1723")return wait({error:"bad_key"});return wait({teams:M.teams,claims:M.claims,steps:M.steps,progress:prog()});},
     adminSetToken:async(k,tm,nw)=>wait({ok:true,token:nw})
   };
 }
 const api=DEMO?mockApi():remoteApi();
 
 /* ============ STATE ============ */
-const S={checked:{},mode:"landing",token:null,key:null,data:null,admin:null,progress:null,tab:"ws",stage:0,adminTab:"overview",adminTeam:"gospel",sel:null,editing:null,confirmDel:null,stepsStage:0,msg:"",loadErr:"",focus:null};
+const S={pinErr:"",busy:false,checked:{},mode:"landing",token:null,key:null,data:null,admin:null,progress:null,tab:"ws",stage:0,adminTab:"overview",adminTeam:"gospel",sel:null,editing:null,confirmDel:null,stepsStage:0,msg:"",loadErr:"",focus:null};
 let saveTimer=null,noteTimers={},progTimer=null;
 function setSave(state){
   const el=$("savechip");if(!el)return;
@@ -486,6 +495,7 @@ async function boot(){
   const q=new URLSearchParams(location.search);
   let slug=(q.get("t")||decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g,"")).toLowerCase();
   if(!slug||slug==="index.html"){S.mode="landing";render();return;}
+  if(slug==="admin"){S.mode="login";S.pinErr="";render();return;}
   await resolveSlug(slug);
 }
 async function resolveSlug(slug){
@@ -493,20 +503,23 @@ async function resolveSlug(slug){
   try{
     const d=await api.teamGet(slug);
     if(!d.error){S.token=slug;S.data=d;S.progress=d.progress;S.mode="team";S.tab=d.team.kind==="assim"?"build":"ws";S.stage=0;render();return;}
-    const a=await api.adminGet(slug);
-    if(!a.error){S.key=slug;S.admin=a;S.progress=a.progress;S.mode="admin";render();return;}
     S.mode="bad";render();
   }catch(e){S.mode="bad";S.loadErr=e.message;render();}
 }
 async function goDemo(who,tab){
   S.sel=null;S.editing=null;S.stage=0;S.adminTab="overview";S.msg="";
-  if(who==="admin"){await resolveDemoAdmin();return;}
+  if(who==="admin"){S.mode="login";S.pinErr="";S.busy=false;render();return;}
   S.token=({gospel:"gospel-story",knowing:"knowing-god",communion:"communion-with-god",community:"life-in-community",mission:"life-on-mission",assim:"assimilation-and-membership"})[who];
   S.mode="loading";render();
   const d=await api.teamGet(S.token);S.data=d;S.progress=d.progress;S.tab=d.team.kind==="assim"?"build":(tab||"ws");S.mode="team";render();
 }
-async function resolveDemoAdmin(){
-  const a=await api.adminGet("admin-demo");S.key="admin-demo";S.admin=a;S.progress=a.progress;S.mode="admin";render();
+async function loginAdmin(pw){
+  S.busy=true;S.pinErr="";render();
+  try{
+    const a=await api.adminGet(pw);
+    if(a.error){S.pinErr=a.error==="locked"?"Too many wrong tries. Wait 15 minutes and try again.":"That password isn’t right.";S.busy=false;S.mode="login";render();return;}
+    S.key=pw;S.admin=a;S.progress=a.progress;S.adminTab="overview";S.busy=false;S.mode="admin";render();
+  }catch(e){S.pinErr="Couldn’t reach the server. Details: "+(e&&e.message?e.message:"unknown error");S.busy=false;S.mode="login";render();}
 }
 
 /* ============ RENDER ============ */
@@ -528,11 +541,15 @@ function demoBar(){
   const opts=[["gospel","Gospel Story team"],["knowing","Knowing God team"],["communion","Communion with God team"],["community","Life in Community team"],["mission","Life on Mission team"],["assim","Assimilation & Membership team"],["admin","Admin"]];
   return '<div class="demo"><div class="demo-in"><b class="sans" style="font-size:.64rem;letter-spacing:.09em;text-transform:uppercase">Demo</b><span>Sample data, nothing is saved.</span><label>Viewing as <select id="demoWho">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+">"+o[1]+"</option>").join("")+"</select></label></div></div>";
 }
+function loginView(){
+  return '<div class="center"><h1>Admin</h1><p class="lbl" style="margin:1rem 0">Enter your admin password.</p><div class="field" style="align-items:center"><label for="pw" class="sub" style="position:absolute;left:-9999px">Admin password</label><input id="pw" class="pw" type="password" autocomplete="current-password" maxlength="80"'+(S.busy?" disabled":"")+'></div>'+(S.pinErr?'<p class="err" role="alert">'+esc(S.pinErr)+"</p>":"")+'<p style="margin-top:1.1rem"><button class="btn" data-a="adminLogin"'+(S.busy?" disabled":"")+">"+(S.busy?"Checking…":"Open admin")+"</button></p>"+(DEMO?'<p class="sub">Demo password: 1723</p>':"")+"</div>";
+}
 function body(){
   switch(S.mode){
     case "landing":return '<div class="center"><h1>Build Hub</h1><p class="lbl" style="margin-top:1rem">Open the link your team lead sent you to get to your team’s workspace.</p></div>';
     case "loading":return '<div class="center"><p class="lbl">Loading…</p></div>';
     case "bad":return '<div class="center"><h1>Link not found</h1><p class="lbl" style="margin-top:1rem">This link doesn’t match a team. Check the spelling, or ask Jutty for the right one.</p>'+(S.loadErr?'<p class="sub">'+esc(S.loadErr)+"</p>":"")+"</div>";
+    case "login":return loginView();
     case "team":return teamView();
     case "admin":return adminView();
   }
@@ -715,11 +732,20 @@ function donePanel(d,steps,cat,st,U){
   }
   return '<div class="done-panel good" role="status"><p><b>'+esc(U[st].name)+"</b> is marked complete."+(claimed.length?" Every claimed outcome is addressed.":" You can reopen it anytime.")+"</p>"+btn+"</div>";
 }
+function descriptorBox(d,st,ro){
+  const val=((d.descriptors||{})[st])||"";
+  let h='<section class="descbox"><h3>Stage descriptor</h3>';
+  if(ro)h+='<p style="margin:0;white-space:pre-wrap">'+(esc(val)||'<span class="lbl">Not written yet.</span>')+"</p>";
+  else h+='<label for="desc-'+st+'">What is true of a disciple at this stage, specifically in your category? It doesn’t have to be a polished sentence.</label><textarea id="desc-'+st+'" data-desc="'+st+'" rows="3" maxlength="2000" placeholder="Type here…">'+esc(val)+"</textarea>";
+  return h+"</section>";
+}
 function bView(d,ro){
   const st=S.stage,cat=d.team.kind==="category",U=unitsOf(d.team.kind);
   let h=stageTabs(d,i=>{const n=d.steps.filter(x=>x.unit===i).length;return n+(n===1?" step":" steps")+((d.flags.units_done||[]).includes(i)?" · done":"");});
   if(cat){const S0=STAGES[st];h+='<div class="stagehead"><h2>'+esc(S0.name)+"</h2><span>"+esc(S0.goal)+'</span><span class="say">'+esc(S0.obj)+": “"+esc(S0.say)+"”</span></div>";}
   else h+='<div class="stagehead"><h2>'+esc(U[st].name)+"</h2><span>"+esc(U[st].blurb)+"</span></div>";
+  if(cat)h+=descriptorBox(d,st,ro);
+  h+='<h2 class="secthead">Steps</h2>';
   if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. Check which outcomes and principles it addresses, and describe the tool it needs. Intimate, Family, and Scattered are the key spaces.</p>';
   const steps=d.steps.filter(x=>x.unit===st);
   if(!steps.length&&S.editing!=="new")h+='<div class="empty">No steps for '+esc(U[st].name)+" yet.</div>";
@@ -744,7 +770,7 @@ function adminTeamData(id){
   const A=S.admin,t=A.teams.find(x=>x.id===id),claims={},others={};
   A.claims.filter(c=>c.team_id===id).forEach(c=>claims[c.indicator]={note:c.note,required:!!c.required});
   A.claims.filter(c=>c.team_id!==id).forEach(c=>{(others[c.indicator]=others[c.indicator]||[]).push(A.teams.find(x=>x.id===c.team_id).abbr);});
-  return {team:t,flags:{claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done||[]},claims,others,steps:A.steps.filter(s=>s.team_id===id)};
+  return {team:t,descriptors:t.descriptors||{},flags:{claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done||[]},claims,others,steps:A.steps.filter(s=>s.team_id===id)};
 }
 function adminView(){
   const tabs=[["overview","Overview"],["teams","Teams"],["steps","All steps"],["required","Required"],["links","Links and export"],["pathway","Pathway Overview"]];
@@ -843,9 +869,11 @@ function allSteps(){
     h+=spaceViz(list,cur!=="am",cur==="am"?-1:+cur);
     h+='<p class="sub">Elder/Staff-led ideals: '+staff+" of "+list.length+" · Tools named: "+tools+" of "+list.length+"</p>";
   }else h+='<div class="empty">No steps here yet.</div>';
-  A.teams.filter(t=>list.some(s=>s.team_id===t.id)).forEach(t=>{
+  const teamsHere=cur==="am"?A.teams.filter(t=>list.some(s=>s.team_id===t.id)):A.teams.filter(t=>t.kind==="category"&&(list.some(s=>s.team_id===t.id)||((t.descriptors||{})[cur]||"").trim()));
+  teamsHere.forEach(t=>{
     const mine=list.filter(x=>x.team_id===t.id);
-    h+='<h3 style="margin:1.2rem 0 .4rem">'+esc(t.name)+"</h3>"+spaceBar(spaceCounts(mine,"ideal_space"),mine.length,"","",true);
+    const dsc=cur==="am"?"":(((t.descriptors||{})[cur])||"").trim();
+    h+='<h3 style="margin:1.2rem 0 .4rem">'+esc(t.name)+"</h3>"+(cur==="am"?"":'<p class="descline"><b>Stage descriptor.</b> '+(dsc?esc(dsc):'<span class="lbl">Not written yet.</span>')+"</p>")+(mine.length?spaceBar(spaceCounts(mine,"ideal_space"),mine.length,"","",true):"");
     const U=unitsOf(t.kind);
     list.filter(s=>s.team_id===t.id).forEach(s=>{h+=(cur==="am"?'<p class="sub" style="margin:.2rem 0">'+esc(U[s.unit].name)+"</p>":"")+stepCard(s,true);});
   });
@@ -858,7 +886,7 @@ function linksTab(){
   A.teams.forEach(t=>{
     h+='<div class="linkrow"><b class="sans" style="font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">'+esc(t.name)+'</b><div class="slug"><span>'+esc(base)+'</span><input id="lk-'+t.id+'" value="'+esc(t.token)+'" aria-label="Link name for '+esc(t.name)+'" maxlength="60"><button class="btn small ghost" data-a="saveLink" data-id="'+t.id+'"'+(DEMO?" disabled":"")+'>Save</button><button class="btn small" data-a="copyLink" data-v="'+esc(t.token)+'">Copy link</button></div></div>';
   });
-  h+='<p class="sub">Link names use lowercase letters, numbers, and dashes. Your own admin address is separate and unchanged.</p>';
+  h+='<p class="sub">Link names use lowercase letters, numbers, and dashes. Your admin page is at /admin and asks for your password.</p>';
   h+='<h3 style="margin:1.8rem 0 .6rem">Export for analysis</h3><div class="row"><button class="btn" data-a="exportJson">Download everything (JSON)</button><button class="btn ghost" data-a="exportCsv">Download steps (CSV)</button><button class="btn ghost" data-a="copyJson">Copy JSON</button></div>'+(S.msg?'<p class="sub" role="status">'+esc(S.msg)+"</p>":"");
   return h;
 }
@@ -870,7 +898,7 @@ function download(name,text,type){
 function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportData(){
   const A=S.admin;
-  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done})),claims:A.claims,steps:A.steps,progress:A.progress};
+  return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done,descriptors:t.descriptors||{}})),claims:A.claims,steps:A.steps,progress:A.progress};
 }
 function exportCsv(){
   const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Tool","Tool source","Addresses","Principles"]];
@@ -881,7 +909,15 @@ async function refreshAdmin(){
   setSave("saving");
   try{const d=await api.adminGet(S.key);if(d.error)throw new Error(d.error);S.admin=d;S.progress=d.progress;setSave("saved");render();}catch(e){setSave("error");}
 }
-function flushNotes(){
+const descTimers={};
+function saveDesc(u,val){
+  if(S.data){S.data.descriptors=S.data.descriptors||{};S.data.descriptors[u]=val;}
+  track(api.descriptorSet(S.token,u,val)).catch(()=>{});
+}
+function flushDesc(){
+  Object.keys(descTimers).forEach(u=>{clearTimeout(descTimers[u]);delete descTimers[u];const el=document.querySelector('[data-desc="'+u+'"]');if(el)saveDesc(+u,el.value);});
+}
+function flushNotes(){flushDesc();
   Object.keys(noteTimers).forEach(id=>{clearTimeout(noteTimers[id]);delete noteTimers[id];const el=document.querySelector('[data-note="'+id+'"]');if(el)saveNote(id,el.value);});
 }
 function saveNote(id,val){
@@ -889,11 +925,15 @@ function saveNote(id,val){
   track(api.claimNote(S.token,id,val)).catch(()=>{});
 }
 document.addEventListener("input",e=>{
+  const du=e.target.dataset&&e.target.dataset.desc;
+  if(du!==undefined){clearTimeout(descTimers[du]);descTimers[du]=setTimeout(()=>{delete descTimers[du];saveDesc(+du,e.target.value);},700);return;}
   const id=e.target.dataset&&e.target.dataset.note;if(!id)return;
   clearTimeout(noteTimers[id]);
   noteTimers[id]=setTimeout(()=>{delete noteTimers[id];saveNote(id,e.target.value);},700);
 });
 document.addEventListener("focusout",e=>{
+  const du=e.target.dataset&&e.target.dataset.desc;
+  if(du!==undefined){if(descTimers[du]){clearTimeout(descTimers[du]);delete descTimers[du];}saveDesc(+du,e.target.value);return;}
   const id=e.target.dataset&&e.target.dataset.note;if(!id)return;
   if(noteTimers[id]){clearTimeout(noteTimers[id]);delete noteTimers[id];saveNote(id,e.target.value);}
 });
@@ -904,6 +944,7 @@ document.addEventListener("click",async e=>{
   const el=e.target.closest("[data-a]");if(!el||el.tagName==="SELECT")return;
   const a=el.dataset.a,id=el.dataset.id,v=el.dataset.v;
   if(el.dataset.key)S.focus=el.dataset.key;
+  if(a==="adminLogin"){const pw=$("pw")?$("pw").value:"";if(!pw){S.pinErr="Enter your password.";render();return;}await loginAdmin(pw);return;}
   if(a==="tab"){flushNotes();S.tab=v;S.editing=null;S.confirmDel=null;}
   else if(a==="stage"){flushNotes();S.stage=+v;S.editing=null;S.confirmDel=null;}
   else if(a==="claim"){
@@ -962,7 +1003,7 @@ document.addEventListener("click",async e=>{
     try{
       const r=await track(api.adminSetToken(S.key,id,val));
       S.admin.teams.find(t=>t.id===id).token=r.token;S.msg="Link saved.";
-    }catch(err){S.msg=({taken:"That link is already in use.",bad_format:"Use 3 to 60 lowercase letters, numbers, and dashes.",bad_key:"Couldn’t verify admin access."})[err.message]||"Couldn’t save the link.";}
+    }catch(err){S.msg=({taken:"That link is already in use.",bad_format:"Use 3 to 60 lowercase letters, numbers, and dashes.",bad_key:"Couldn’t verify admin access.",locked:"Admin is locked after too many wrong tries. Wait 15 minutes."})[err.message]||"Couldn’t save the link.";}
   }
   else if(a==="copyLink"){try{await navigator.clipboard.writeText(location.origin+"/"+v);S.msg="Link copied.";}catch(err){S.msg="Couldn’t copy. Select the link and copy it by hand.";}}
   else if(a==="exportJson"){try{download("pathway-build-export.json",JSON.stringify(exportData(),null,2),"application/json");S.msg="";}catch(err){S.msg="Download isn’t available here. Use Copy JSON.";}}
@@ -972,6 +1013,7 @@ document.addEventListener("click",async e=>{
   render();
 });
 setInterval(()=>{if(!document.hidden&&(S.mode==="team"||S.mode==="admin"))refreshProgress();},60000);
+document.addEventListener("keydown",e=>{if(e.target&&e.target.id==="pw"&&e.key==="Enter"&&e.target.value)loginAdmin(e.target.value);});
 boot();
 
 </script>
