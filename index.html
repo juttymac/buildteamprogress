@@ -370,7 +370,6 @@ const LEADERS=["Self (the disciple)","Multiplying Disciple (Spiritual Parent)","
 const unitsOf=kind=>kind==="assim"?AM_UNITS:STAGES;
 
 const TOOL_KINDS=["Existing at Summit","Existing from outside","Needs to be created"];
-const PRINCIPLES=[["Convictional","Rooted in truth"],["Relational","Decentralized"],["Transformational","Not behavior modification"],["Transferable","Simple to access and use"],["Gospel-Centered","Points to Christ and his grace"],["Holistic","Head, heart, and hand"],["Measurable","Qualitative and quantitative"]];
 
 /* ============ HELPERS ============ */
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -649,7 +648,7 @@ function stepCard(s,ro){
   }
   h+='</header><p class="desc">'+esc(s.description)+'</p><div class="lead"><b>Ideal</b><span>'+esc(s.ideal_space)+" · "+esc(s.ideal_leader)+"</span><b>Secondary</b><span>"+esc(sec)+"</span><b>Tool</b><span>"+tool+"</span>"+
     ((s.indicators&&s.indicators.length)?'<b>Addresses</b><span class="meta" style="margin:0">'+s.indicators.map(id=>IND[id]?'<span class="chip plain" title="'+esc(indLabel(IND[id]))+'">'+esc(short(id))+"</span>":"").join("")+"</span>":"")+
-    ((s.principles&&s.principles.length)?'<b>Principles</b><span class="meta" style="margin:0">'+s.principles.map(p=>'<span class="chip">'+esc(p)+"</span>").join("")+"</span>":"")+"</div>";
+    "</div>";
   return h+"</article>";
 }
 function stepForm(d,s){
@@ -660,26 +659,21 @@ function stepForm(d,s){
     '<div class="field"><label for="f-name">Step name</label><input id="f-name" data-key="f-name" type="text" maxlength="120" value="'+esc(s.name||"")+'"></div>'+
     '<div class="field"><label for="f-desc">What is it, and why is it here?</label><textarea id="f-desc" rows="4">'+esc(s.description||"")+"</textarea></div>"+
     (cat?'<fieldset><legend>Which outcomes does this step address?</legend>'+(claimed.length?'<p class="sub" style="margin:.2rem 0 .5rem">Pick every one this step helps produce. The same outcome can be addressed by more than one step.</p><div class="checks" id="f-inds" style="max-height:18rem">'+claimed.map(i=>'<label><input type="checkbox" value="'+i.id+'"'+(selI.includes(i.id)?" checked":"")+"><span><b>"+esc(short(i.id))+":</b> "+esc(i.text)+"</span></label>").join("")+"</div>":'<p class="sub">Claim outcomes on the Worksheet first and they’ll show up here.</p>')+"</fieldset>":"")+
-    '<fieldset><legend>Which principles does this step address?</legend><div class="checks" id="f-prs" style="max-height:none">'+PRINCIPLES.map(p=>'<label><input type="checkbox" value="'+p[0]+'"'+(selP.includes(p[0])?" checked":"")+"><span><b>"+p[0]+'</b> <span class="sub">'+p[1]+"</span></span></label>").join("")+"</div></fieldset>"+
     '<fieldset><legend>Ideal</legend><div class="grid2"><div class="field"><label for="f-is">Space</label><select id="f-is">'+spaceOpts(s.ideal_space||"Family")+'</select></div><div class="field"><label for="f-il">Leader</label><select id="f-il">'+leaderOpts(s.ideal_leader||"Trained Leader")+"</select></div></div></fieldset>"+
     '<fieldset><legend>Secondary (if there is one)</legend><div class="grid2"><div class="field"><label for="f-ss">Space</label><select id="f-ss">'+spaceOpts(s.secondary_space||"","None")+'</select></div><div class="field"><label for="f-sl">Leader</label><select id="f-sl">'+leaderOpts(s.secondary_leader||"","None")+"</select></div></div></fieldset>"+
     '<fieldset><legend>The tool this step needs</legend><div class="field"><label for="f-tk">Where it comes from</label><select id="f-tk">'+toolOpts(s.tool_kind||"")+'</select></div><div class="field"><label for="f-tool">Describe the type of tool and other information that will help us understand what is needed.</label><textarea id="f-tool" rows="6" maxlength="2000" placeholder="Example: We need to build a tool that helps a spiritual parent train the people they are leading to find their voice through confession and prayer.">'+esc(s.tool||"")+"</textarea></div></fieldset>"+
     '<div id="f-err" class="err" role="alert"></div><div class="row" style="margin:.4rem 0 0"><button class="btn" data-a="saveStep" data-id="'+esc(s.id||"")+'">Save step</button><button class="btn ghost" data-a="cancelStep">Cancel</button></div></div>';
 }
 function coverGrid(d,steps,cat){
+  if(!cat)return "";
   const st=S.stage;
-  const claimed=cat?INDS.filter(i=>i.s===st&&d.claims[i.id]):[];
+  const claimed=INDS.filter(i=>i.s===st&&d.claims[i.id]);
   const dn=id=>steps.filter(x=>(x.indicators||[]).includes(id)).length;
-  const pn=n=>steps.filter(x=>(x.principles||[]).includes(n)).length;
   const badge=n=>n?'<span class="badge ok">'+(n>1?"Addressed ×"+n:"Addressed")+"</span>":'<span class="badge">Not yet</span>';
   const lab='<b class="sans" style="font-size:.6rem;letter-spacing:.08em;text-transform:uppercase">';
-  const dDone=claimed.filter(i=>dn(i.id)).length,pDone=PRINCIPLES.filter(p=>pn(p[0])).length;
-  let left="";
-  if(cat)left='<section class="covercol" aria-label="Claimed outcomes"><header><h3>Claimed outcomes</h3><span class="sub">'+dDone+" of "+claimed.length+" addressed</span></header>"+
-    (claimed.length?claimed.map(i=>{const n=dn(i.id);return '<div class="crow'+(n?" on":"")+'"><span aria-hidden="true">'+(n?"✓":"○")+"</span><span>"+lab+esc(short(i.id))+"</b><br>"+esc(i.text)+"</span>"+badge(n)+"</div>";}).join(""):'<p class="sub" style="padding:.8rem 1rem;margin:0">Nothing claimed at this stage yet. Use the Worksheet tab.</p>')+"</section>";
-  const right='<section class="covercol" aria-label="Principles check"><header><h3>Principles check</h3><span class="sub">'+pDone+" of 7 addressed</span></header><div class=\"pgrid\">"+
-    PRINCIPLES.map(p=>{const n=pn(p[0]);return '<div class="pcell'+(n?" on":"")+'"><span>'+lab+'<span aria-hidden="true">'+(n?"✓ ":"○ ")+"</span>"+p[0]+'</b><br><span class="sub">'+p[1]+"</span></span>"+badge(n)+"</div>";}).join("")+"</div></section>";
-  return '<div class="covergrid'+(cat?"":" single")+'">'+left+right+"</div>";
+  const dDone=claimed.filter(i=>dn(i.id)).length;
+  return '<div class="covergrid single"><section class="covercol" aria-label="Claimed outcomes"><header><h3>Claimed outcomes</h3><span class="sub">'+dDone+" of "+claimed.length+" addressed</span></header>"+
+    (claimed.length?claimed.map(i=>{const n=dn(i.id);return '<div class="crow'+(n?" on":"")+'"><span aria-hidden="true">'+(n?"✓":"○")+"</span><span>"+lab+esc(short(i.id))+"</b><br>"+esc(i.text)+"</span>"+badge(n)+"</div>";}).join(""):'<p class="sub" style="padding:.8rem 1rem;margin:0">Nothing claimed at this stage yet. Use the Worksheet tab.</p>')+"</section></div>";
 }
 const SPACE_KEYS=["Divine","Intimate","Family","Scattered","Gathered"];
 const spaceCounts=(steps,field)=>{const c={};SPACE_KEYS.forEach(k=>c[k]=0);steps.forEach(x=>{const v=x[field];if(v&&c[v]!==undefined)c[v]++;});return c;};
@@ -705,7 +699,6 @@ function spaceViz(steps,cat,stageIdx){
 function checkPanel(d,steps,cat,st,U){
   const claimed=cat?INDS.filter(i=>i.s===st&&d.claims[i.id]):[];
   const miss=claimed.filter(i=>!steps.some(x=>(x.indicators||[]).includes(i.id)));
-  const missP=PRINCIPLES.filter(p=>!steps.some(x=>(x.principles||[]).includes(p[0])));
   const rel=steps.filter(x=>["Intimate","Family","Scattered"].includes(x.ideal_space)).length;
   const pct=steps.length?Math.round(rel/steps.length*100):0;
   const need=cat&&st===0?70:50;
@@ -713,7 +706,6 @@ function checkPanel(d,steps,cat,st,U){
   const wt=steps.filter(x=>x.tool&&x.tool.trim()).length;
   const items=[];
   if(cat)items.push([claimed.length>0&&!miss.length,claimed.length?(miss.length?miss.length+" of "+claimed.length+" claimed outcomes aren’t addressed by a step yet.":"Every claimed outcome is addressed by at least one step."):"No outcomes claimed at this stage yet."]);
-  items.push([!missP.length,missP.length?"Not yet represented: "+missP.map(p=>p[0]).join(", ")+".":"All seven principles show up in this stage."]);
   items.push([steps.length>0&&spaceOk,steps.length?pct+"% of ideal spaces are Intimate, Family, or Scattered."+(spaceOk?"":(cat&&st===0?" New disciples need to be highly relational.":" Look for steps a person or small group could carry.")):"No steps yet."]);
   items.push([steps.length>0&&wt===steps.length,wt+" of "+steps.length+" steps describe a tool. Tools can be named afterward."]);
   const checked=!!S.checked[st];
@@ -746,7 +738,7 @@ function bView(d,ro){
   else h+='<div class="stagehead"><h2>'+esc(U[st].name)+"</h2><span>"+esc(U[st].blurb)+"</span></div>";
   if(cat)h+=descriptorBox(d,st,ro);
   h+='<h2 class="secthead">Steps</h2>';
-  if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. Check which outcomes and principles it addresses, and describe the tool it needs. Intimate, Family, and Scattered are the key spaces.</p>';
+  if(!ro)h+='<p class="note">A step is one thing a disciple learns, experiences, or does. Say what it is and why it’s here, then who ideally leads it and where. Add a secondary option if there is one. Check which outcomes it addresses, and describe the tool it needs. Intimate, Family, and Scattered are the key spaces.</p>';
   const steps=d.steps.filter(x=>x.unit===st);
   if(!steps.length&&S.editing!=="new")h+='<div class="empty">No steps for '+esc(U[st].name)+" yet.</div>";
   steps.forEach(s=>{h+=(S.editing===s.id&&!ro)?stepForm(d,s):stepCard(s,ro);});
@@ -755,7 +747,7 @@ function bView(d,ro){
     else if(!S.editing)h+='<p><button class="btn" data-a="newStep">Add a step</button></p>';
   }
   h+='<h2 class="secthead">Checklists</h2>';
-  if(!ro)h+='<aside class="mustcheck" role="note"><p>Before you mark this stage as complete, please check that this stage is <b>covering every claimed outcome</b>, is <b>balanced (when possible) in the principles</b>, and is <b>utilizing the ideal spaces for this particular stage</b>.</p></aside>';
+  if(!ro)h+='<aside class="mustcheck" role="note"><p>Before you mark this stage as complete, please check that this stage is <b>covering every claimed outcome</b> and is <b>utilizing the ideal spaces for this particular stage</b>.</p></aside>';
   h+=coverGrid(d,steps,cat)+spaceViz(steps,cat,cat?st:-1);
   if(!ro){
     const done=(d.flags.units_done||[]).includes(st);
@@ -901,8 +893,8 @@ function exportData(){
   return {exportedAt:new Date().toISOString(),indicators:INDS,teams:A.teams.map(t=>({id:t.id,name:t.name,abbr:t.abbr,kind:t.kind,claim_done:t.claim_done,claim_units_done:claimUnits(t),units_done:t.units_done,descriptors:t.descriptors||{}})),claims:A.claims,steps:A.steps,progress:A.progress};
 }
 function exportCsv(){
-  const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Tool","Tool source","Addresses","Principles"]];
-  A.steps.forEach(s=>{const t=A.teams.find(x=>x.id===s.team_id);const U=unitsOf(t.kind);rows.push([t.name,U[s.unit].name,s.name,s.description,s.ideal_space,s.ideal_leader,s.secondary_space||"",s.secondary_leader||"",s.tool||"",s.tool_kind||"",(s.indicators||[]).map(short).join("; "),(s.principles||[]).join("; ")]);});
+  const A=S.admin,rows=[["Team","Stage or component","Step","What it is and why","Ideal space","Ideal leader","Secondary space","Secondary leader","Tool","Tool source","Addresses"]];
+  A.steps.forEach(s=>{const t=A.teams.find(x=>x.id===s.team_id);const U=unitsOf(t.kind);rows.push([t.name,U[s.unit].name,s.name,s.description,s.ideal_space,s.ideal_leader,s.secondary_space||"",s.secondary_leader||"",s.tool||"",s.tool_kind||"",(s.indicators||[]).map(short).join("; ")]);});
   return rows.map(r=>r.map(csvCell).join(",")).join("\n");
 }
 async function refreshAdmin(){
@@ -982,7 +974,7 @@ document.addEventListener("click",async e=>{
     const d=S.data,name=$("f-name").value.trim(),desc=$("f-desc").value.trim();
     if(!name){$("f-err").textContent="Give the step a name.";$("f-name").focus();return;}
     if(!desc){$("f-err").textContent="Say what it is and why it’s here.";$("f-desc").focus();return;}
-    const step={unit:S.stage,name,description:desc,ideal_space:$("f-is").value,ideal_leader:$("f-il").value,secondary_space:$("f-ss").value,secondary_leader:$("f-sl").value,tool:$("f-tool").value.trim(),tool_kind:$("f-tk").value,indicators:[...document.querySelectorAll("#f-inds input:checked")].map(x=>x.value),principles:[...document.querySelectorAll("#f-prs input:checked")].map(x=>x.value)};
+    const step={unit:S.stage,name,description:desc,ideal_space:$("f-is").value,ideal_leader:$("f-il").value,secondary_space:$("f-ss").value,secondary_leader:$("f-sl").value,tool:$("f-tool").value.trim(),tool_kind:$("f-tk").value,indicators:[...document.querySelectorAll("#f-inds input:checked")].map(x=>x.value),principles:((id&&S.data.steps.find(z=>z.id===id))||{}).principles||[]};
     if(id)step.id=id;
     el.disabled=true;
     try{
